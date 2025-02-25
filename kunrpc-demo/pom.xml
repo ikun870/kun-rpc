@@ -12,7 +12,7 @@
     <artifactId>kunrpc-demo</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>kunrpc-client-demo</module>
+        <module>kunrpc-consumer-demo</module>
         <module>kunrpc-provider-demo</module>
         <module>kunrpc-api</module>
     </modules>

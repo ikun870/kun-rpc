@@ -4,10 +4,7 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea
 *.iws
 *.iml
 *.ipr
@@ -40,4 +37,15 @@ build/
 ### test ###
 # Ignore all test folders under src
 src/**/test/
+
+##编译文件
+*.class
+
+##包文件
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
 

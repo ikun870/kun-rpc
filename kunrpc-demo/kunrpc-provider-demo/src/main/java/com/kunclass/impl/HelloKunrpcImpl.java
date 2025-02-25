@@ -1,4 +1,4 @@
-package com.kunclass;
+package com.kunclass.impl;
 import com.kunapi.HelloKunrpc;
 public class HelloKunrpcImpl implements  HelloKunrpc{
     @Override
