@@ -1,10 +1,11 @@
 package com.kunclass;
 
+import com.kunclass.discovery.Registry;
+import com.kunclass.discovery.RegistryConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.rmi.registry.Registry;
+
 import java.util.List;
-import java.util.logging.Handler;
 
 @Slf4j
 public class KunrpcBootstrap {
@@ -12,7 +13,14 @@ public class KunrpcBootstrap {
 
 
     //KunrpcBootstrap是一个单例，我们希望每个应用程序都只有一个实例
-    private static KunrpcBootstrap kunrpcBootstrap = new KunrpcBootstrap();
+    private static final KunrpcBootstrap kunrpcBootstrap = new KunrpcBootstrap();
+
+    //定义一些相关的基础配置
+    private String appName = "default";
+    private RegistryConfig registryConfig;
+    private ProtocolConfig protocolConfig;
+    private int port = 8088;
+    private Registry registry;
 
     //构造函数私有化
     private KunrpcBootstrap() {
@@ -31,7 +39,7 @@ public class KunrpcBootstrap {
      * @return this
      */
     public KunrpcBootstrap application(String appName) {
-
+        this.appName = appName;
         return  kunrpcBootstrap;
     }
 
@@ -41,6 +49,11 @@ public class KunrpcBootstrap {
      * @return this 当前实例
      */
     public KunrpcBootstrap registry(RegistryConfig registryConfig) {
+        //这里维护一个zookeeper实例，但是这样写就会将zooKeeper和当前工程耦合
+        //我们更希望以后可以扩展更多种不同的实现
+
+        //尝试使用registryConfig来获取注册中心，类似于工厂模式
+        this.registry = registryConfig.getRegistry();
         return this;
        // return kunrpcBootstrap;
     }
@@ -51,6 +64,7 @@ public class KunrpcBootstrap {
      * @return
      */
     public KunrpcBootstrap protocol(ProtocolConfig protocolConfig) {
+        this.protocolConfig = protocolConfig;
         log.debug("protocolConfig:{}", protocolConfig.toString());
         return this;
     }
@@ -61,29 +75,38 @@ public class KunrpcBootstrap {
 
     /**
      * 用来发布一个服务,将接口以及实现，注册到服务中心
-     * @param serviceConfig 独立封装的需要发布的服务
+     * @param services 独立封装的需要发布的服务
      * @return
      */
-    public KunrpcBootstrap publish(ServiceConfig<?> serviceConfig) {
-        log.debug("serviceConfig:{}", serviceConfig.toString());
+    public KunrpcBootstrap publish(ServiceConfig<?> services) {
+        //创建zookeeper
+        //注册service，我们抽象了注册中心的概念，使用注册中心的一个实现完成注册
+        //这里难道不是强耦合了吗？是的
+        registry.register(services);
         return this;
     }
 
     /**
      * 用来发布多个服务
-     * @param serviceConfig 独立封装的需要发布的服务
+     * @param services 独立封装的需要发布的服务
      * @return
      */
-    public KunrpcBootstrap publish(List<ServiceConfig<?>> serviceConfig) {
+    public KunrpcBootstrap publish(List<ServiceConfig<?>> services) {
+        for(ServiceConfig<?> service : services) {
+            publish(service);
+        }
         return this;
     }
 
     /**
      * 启动引导程序
-     * @return this
      */
-    public KunrpcBootstrap start() {
-        return this;
+    public void start() {
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

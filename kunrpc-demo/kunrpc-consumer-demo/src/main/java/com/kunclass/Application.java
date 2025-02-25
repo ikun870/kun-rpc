@@ -1,26 +1,24 @@
 package com.kunclass;
 
 import com.kunapi.HelloKunrpc;
-
-
-import java.lang.ref.Reference;
+import com.kunclass.discovery.RegistryConfig;
 
 public class Application {
     public static void main(String[] args) {
-        // Ïë¾¡Ò»ÇĞ°ì·¨»ñÈ¡´úÀí¶ÔÏó£¬Ê¹ÓÃreferenceConfig½øĞĞ·â×°
-        //referenceConfigÒ»¶¨ÓĞÉú³É´úÀí¶ÔÏóµÄ·½·¨£¬get()
+        // æƒ³å°½ä¸€åˆ‡åŠæ³•è·å–ä»£ç†å¯¹è±¡ï¼Œä½¿ç”¨referenceConfigè¿›è¡Œå°è£…
+        //referenceConfigä¸€å®šæœ‰ç”Ÿæˆä»£ç†å¯¹è±¡çš„æ–¹æ³•ï¼Œget()
         ReferenceConfig<HelloKunrpc> referenceConfig = new ReferenceConfig<>();
         referenceConfig.setInterface(HelloKunrpc.class);
 
 
-        //´úÀí×öÁËÊ²Ã´
-        //1.Á¬½Ó×¢²áÖĞĞÄ 2.À­È¡·şÎñÁĞ±í 3.Ñ¡ÔñÒ»¸ö·şÎñ²¢½¨Á¢Á¬½Ó 4.·¢ËÍÇëÇó£¬Ğ¯´øÒ»Ğ©ĞÅÏ¢£¨½Ó¿ÚÃû¡¢²ÎÊıÁĞ±í¡¢·½·¨µÄÃû×Ö£©¡¢»ñµÃ½á¹û
+        //ä»£ç†åšäº†ä»€ä¹ˆ
+        //1.è¿æ¥æ³¨å†Œä¸­å¿ƒ 2.æ‹‰å–æœåŠ¡åˆ—è¡¨ 3.é€‰æ‹©ä¸€ä¸ªæœåŠ¡å¹¶å»ºç«‹è¿æ¥ 4.å‘é€è¯·æ±‚ï¼Œæºå¸¦ä¸€äº›ä¿¡æ¯ï¼ˆæ¥å£åã€å‚æ•°åˆ—è¡¨ã€æ–¹æ³•çš„åå­—ï¼‰ã€è·å¾—ç»“æœ
         KunrpcBootstrap.getInstance()
                 .application("first-kunrpc-consumer")
                 .registry(new RegistryConfig("zookeeper://localhost:2181"))
                 .reference(referenceConfig);
 
-        // »ñÈ¡Ò»¸ö´úÀí¶ÔÏó
+        // è·å–ä¸€ä¸ªä»£ç†å¯¹è±¡
         HelloKunrpc helloKunrpc = referenceConfig.get();
         helloKunrpc.sayHi("kunrpc");
 

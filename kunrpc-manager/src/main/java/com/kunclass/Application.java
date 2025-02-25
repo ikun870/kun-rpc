@@ -1,12 +1,10 @@
 package com.kunclass;
 
-import com.kunclass.exceptions.ZookeeperException;
 import com.kunclass.utils.zookeeper.ZookeeperNode;
-import com.kunclass.utils.zookeeper.ZookeeperUtil;
+import com.kunclass.utils.zookeeper.ZookeeperUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.*;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -31,7 +29,7 @@ public class Application {
         //  └─ config
 
         // 创建zookeeper实例，建立连接
-        ZooKeeper zooKeeper = ZookeeperUtil.createZooKeeper();
+        ZooKeeper zooKeeper = ZookeeperUtils.createZooKeeper();
 
         //定义节点和数据
         String basePath = "/kunrpc-metadata";
@@ -43,9 +41,9 @@ public class Application {
         ZookeeperNode consumerNode = new ZookeeperNode(consumersPath, null);
         //创建节点
         List.of(baseNode, providerNode, consumerNode).forEach(node -> {
-            ZookeeperUtil.createNode(zooKeeper, node, null, CreateMode.PERSISTENT);
+            ZookeeperUtils.createNode(zooKeeper, node, null, CreateMode.PERSISTENT);
         });
 
-        ZookeeperUtil.close(zooKeeper);
+        ZookeeperUtils.close(zooKeeper);
     }
 }

@@ -2,6 +2,7 @@ package com.kunclass;
 
 
 import com.kunapi.HelloKunrpc;
+import com.kunclass.discovery.RegistryConfig;
 import com.kunclass.impl.HelloKunrpcImpl;
 
 public class Application {
@@ -18,11 +19,11 @@ public class Application {
           //2.发布服务
         KunrpcBootstrap.getInstance()
                 .application("first-kunrpc-provider")
-                //配置注册中心
+                //配置注册中心，包含创建zookeeper实例
                 .registry(new RegistryConfig("zookeeper://localhost:2181"))
                 //协议
                 .protocol(new ProtocolConfig("jdk"))
-                //发布服务
+                //发布服务到对应的zookeeper上
                 .publish(service)
                 .start();
     }

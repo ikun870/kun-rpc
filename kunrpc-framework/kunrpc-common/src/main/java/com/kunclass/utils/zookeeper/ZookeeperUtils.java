@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 @Slf4j
-public class ZookeeperUtil {
+public class ZookeeperUtils {
 
     /**
      * 使用默认配置创建zookeeper实例
@@ -89,6 +89,22 @@ public class ZookeeperUtil {
         catch (InterruptedException e) {
             log.error("关闭zookeeper实例时发生异常：",e);
             throw new ZookeeperException();
+        }
+
+    }
+    /**
+     * 判断节点是否存在
+     * @param zooKeeper
+     * @param node
+     * @param watcher
+     * @return
+     */
+    public static boolean exists(ZooKeeper zooKeeper,String node,Watcher watcher){
+        try {
+            return zooKeeper.exists(node, watcher)!=null;
+        } catch (KeeperException |InterruptedException e) {
+            log.error("节点{}存在异常：",node,e);
+            throw new ZookeeperException(e);
         }
 
     }
