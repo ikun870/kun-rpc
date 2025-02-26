@@ -3,12 +3,12 @@ package com.kunclass;
 import com.kunapi.HelloKunrpc;
 import com.kunclass.discovery.RegistryConfig;
 
-public class Application {
+public class ConsumerApplication {
     public static void main(String[] args) {
         // 想尽一切办法获取代理对象，使用referenceConfig进行封装
         //referenceConfig一定有生成代理对象的方法，get()
         ReferenceConfig<HelloKunrpc> referenceConfig = new ReferenceConfig<>();
-        referenceConfig.setInterface(HelloKunrpc.class);
+        referenceConfig.setInterfaceRef(HelloKunrpc.class);
 
 
         //代理做了什么

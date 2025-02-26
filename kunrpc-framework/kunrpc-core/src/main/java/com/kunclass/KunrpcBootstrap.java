@@ -114,7 +114,7 @@ public class KunrpcBootstrap {
      */
     public void start() {
         try {
-            Thread.sleep(10000);
+            Thread.sleep(1000000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -127,6 +127,10 @@ public class KunrpcBootstrap {
     public KunrpcBootstrap reference(ReferenceConfig<?> referenceConfig) {
         //在这个方法里，我们是否可以拿到相关的配置项-注册中心
         //配置reference,将来调用get方法时，方便生成代理对象
+
+        //1.reference需要一个注册中心
+        //这里是值传递，但是传递的是引用，所以我们可以直接设置
+        referenceConfig.setRegistry(registry);
 
         return this;
     }

@@ -5,7 +5,7 @@ import com.kunapi.HelloKunrpc;
 import com.kunclass.discovery.RegistryConfig;
 import com.kunclass.impl.HelloKunrpcImpl;
 
-public class Application {
+public class ProviderApplication {
     public static void main(String[] args) {
         //服务提供方需要注册服务，启动服务
         //1.封装要发布的服务
