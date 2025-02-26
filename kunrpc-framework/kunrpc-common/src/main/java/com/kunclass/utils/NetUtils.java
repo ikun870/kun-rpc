@@ -37,7 +37,7 @@ public class NetUtils {
             }
             throw new NetworkException();
         } catch (SocketException e) {
-            log.error("获取局域网ip时放生异常。", e);
+            log.error("获取局域网ip时发生异常。", e);
             throw new NetworkException(e);
         }
     }

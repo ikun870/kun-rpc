@@ -2,9 +2,18 @@ package com.kunclass;
 
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
 
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +33,10 @@ public class KunrpcBootstrap {
     private ProtocolConfig protocolConfig;
     private int port = 8088;
     private Registry registry;
+
+    //连接的缓存，InetSocketAddress做key时，一定要注意是否重写了equals和toString方法
+    public static final Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
+
 
     //维护已经发布且暴露的服务列表 ，key--》interface的全限定名，value--》serviceConfig
     private static final Map<String,ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
@@ -110,13 +123,45 @@ public class KunrpcBootstrap {
     }
 
     /**
-     * 启动引导程序
+     * 启动netty服务引导程序
      */
     public void start() {
+        //定义线程池，EventLoopGroup是一个线程组，它包含了一组NIO线程，专门用于网络事件的处理
+        //bossGroup用于接收连接，workerGroup用于具体的处理
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+        //启动一个服务端需要一个启动类
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        //配置启动类
+        bootstrap = bootstrap.group(bossGroup, workerGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        //添加处理器
+                        //这里是核心，我们需要添加很多入站和出站的处理器handler
+                        socketChannel.pipeline().addLast(null);
+                    }
+                });
+
+        //绑定端口，同步等待成功
         try {
-            Thread.sleep(1000000);
+            ChannelFuture channelFuture = bootstrap.bind(port).sync();
+            System.out.println("Server started on port " + port);
+            //等待服务端监听端口关闭
+            channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+        } finally {
+            //关闭线程池
+            try {
+                bossGroup.shutdownGracefully().sync();
+                workerGroup.shutdownGracefully().sync();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
         }
     }
 

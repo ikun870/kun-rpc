@@ -8,4 +8,7 @@ public class NetworkException extends RuntimeException {
         super(cause);
     }
 
+    public NetworkException(String message) {
+        super(message);
+    }
 }

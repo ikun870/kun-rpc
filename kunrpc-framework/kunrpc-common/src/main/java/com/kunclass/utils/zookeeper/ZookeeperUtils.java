@@ -35,7 +35,9 @@ public class ZookeeperUtils {
             {
                 // 只有连接成功才放行
                 if (event.getState() == Watcher.Event.KeeperState.SyncConnected) {
-                    log.info("客户端已经连接成功。");
+                    if(log.isDebugEnabled())
+                        log.debug("客户端已经连接成功。");
+
                     countDownLatch.countDown();
                 }
             });
