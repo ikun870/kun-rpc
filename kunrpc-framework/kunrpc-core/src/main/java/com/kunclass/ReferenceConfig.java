@@ -1,5 +1,6 @@
 package com.kunclass;
 
+import com.kunclass.discovery.NettyBootstrapInitializer;
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
 import com.kunclass.exceptions.NetworkException;
@@ -68,29 +69,11 @@ public class ReferenceConfig<T> {
                 //1.尝试从全局的缓存中获取一个通道
                 Channel channel = KunrpcBootstrap.CHANNEL_CACHE.get(inetSocketAddress);
                 if(channel == null ) {
-                    //新建一个连接
-                    EventLoopGroup group = new NioEventLoopGroup();
-
-                    //启动一个客户端需要一个启动类
-                    Bootstrap bootstrap = new Bootstrap();
-                    bootstrap= bootstrap.group(group)
-                            //指定channel类型
-                            .channel(NioSocketChannel.class)
-                            .handler(new ChannelInitializer<SocketChannel>() {
-                                @Override
-                                protected void initChannel(SocketChannel socketChannel) throws Exception {
-                                    //添加处理器
-                                    socketChannel.pipeline().addLast(null);
-                                }
-                            });
-                    //尝试连接服务器
-                    try {
-                        channel = bootstrap.connect(inetSocketAddress).sync().channel();
-                        //加入缓存
-                        KunrpcBootstrap.CHANNEL_CACHE.put(inetSocketAddress,channel);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    //await()方法是同步的，会阻塞当前线程，直到连接建立成功再返回，netty还提供了异步处理的逻辑
+                   channel = NettyBootstrapInitializer.getInstance().connect(inetSocketAddress)
+                            .await().channel();
+                   //将channel放入缓存
+                    KunrpcBootstrap.CHANNEL_CACHE.put(inetSocketAddress,channel);
                 }
                 if(channel == null)
                     throw new NetworkException("获取通道时发生异常");
