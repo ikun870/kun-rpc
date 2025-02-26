@@ -5,7 +5,10 @@ import com.kunclass.discovery.RegistryConfig;
 import lombok.extern.slf4j.Slf4j;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class KunrpcBootstrap {
@@ -21,6 +24,9 @@ public class KunrpcBootstrap {
     private ProtocolConfig protocolConfig;
     private int port = 8088;
     private Registry registry;
+
+    //维护已经发布且暴露的服务列表 ，key--》interface的全限定名，value--》serviceConfig
+    private static final Map<String,ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
 
     //构造函数私有化
     private KunrpcBootstrap() {
@@ -75,14 +81,19 @@ public class KunrpcBootstrap {
 
     /**
      * 用来发布一个服务,将接口以及实现，注册到服务中心
-     * @param services 独立封装的需要发布的服务
+     * @param service 独立封装的需要发布的服务
      * @return
      */
-    public KunrpcBootstrap publish(ServiceConfig<?> services) {
+    public KunrpcBootstrap publish(ServiceConfig<?> service) {
         //创建zookeeper
         //注册service，我们抽象了注册中心的概念，使用注册中心的一个实现完成注册
         //这里难道不是强耦合了吗？是的
-        registry.register(services);
+
+        registry.register(service);
+
+        //1.当服务调用方通过接口、方法名、具体的方法参数列表发起调用时，服务提供方怎么根据这些信息找到对应的服务实现类，然后调用对应的方法
+        //（1）new一个  （2）spring beanFactory.getBean(Class)  （3）自己维护映射关系 ✔️✔️
+        SERVICES_LIST.put(service.getInterface().getName(),service);
         return this;
     }
 
