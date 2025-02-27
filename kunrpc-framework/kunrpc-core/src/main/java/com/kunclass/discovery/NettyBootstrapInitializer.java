@@ -1,13 +1,17 @@
 package com.kunclass.discovery;
 
-import com.kunclass.KunrpcBootstrap;
+import com.kunclass.channelHandler.ConsumerChannelInitializer;
+import com.kunclass.channelHandler.handler.MySimpleChannelInboundHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.extern.slf4j.Slf4j;
+
 //TODO：这里会有问题
+@Slf4j
 public class NettyBootstrapInitializer {
 
     private static Bootstrap bootstrap = new Bootstrap();
@@ -20,13 +24,7 @@ public class NettyBootstrapInitializer {
         bootstrap = bootstrap.group(group)
                 //指定channel类型
                 .channel(NioSocketChannel.class)
-                .handler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        //添加处理器
-                        socketChannel.pipeline().addLast(null);
-                    }
-                });
+                .handler(new ConsumerChannelInitializer());
     }
 
     private NettyBootstrapInitializer() {

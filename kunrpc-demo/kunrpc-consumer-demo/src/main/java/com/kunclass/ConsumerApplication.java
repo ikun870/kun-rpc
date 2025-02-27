@@ -2,7 +2,9 @@ package com.kunclass;
 
 import com.kunapi.HelloKunrpc;
 import com.kunclass.discovery.RegistryConfig;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ConsumerApplication {
     public static void main(String[] args) {
         // 想尽一切办法获取代理对象，使用referenceConfig进行封装
@@ -20,7 +22,8 @@ public class ConsumerApplication {
 
         // 获取一个代理对象
         HelloKunrpc helloKunrpc = referenceConfig.get();
-        helloKunrpc.sayHi("kunrpc");
+        String sayHi = helloKunrpc.sayHi("kunrpc");
+        log.info("sayHi:{}", sayHi);
 
     }
 }

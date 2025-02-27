@@ -3,10 +3,9 @@ package com.kunclass;
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -14,9 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 
 
 import java.net.InetSocketAddress;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
@@ -40,6 +41,9 @@ public class KunrpcBootstrap {
 
     //维护已经发布且暴露的服务列表 ，key--》interface的全限定名，value--》serviceConfig
     private static final Map<String,ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
+
+    //定义全局的对外挂起的completableFuture
+    public static final Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
 
     //构造函数私有化
     private KunrpcBootstrap() {
@@ -141,7 +145,16 @@ public class KunrpcBootstrap {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         //添加处理器
                         //这里是核心，我们需要添加很多入站和出站的处理器handler
-                        socketChannel.pipeline().addLast(null);
+                        socketChannel.pipeline().addLast(new SimpleChannelInboundHandler<>() {
+                            @Override
+                            protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object msg) throws Exception {
+                                ByteBuf byteBuf = (ByteBuf) msg;
+                                log.info("byteBf-->{}: " , byteBuf.toString(Charset.defaultCharset()));
+
+                                //可以就此不管了，也可以写回去
+                                channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer("Kunrpc:Hello,Client!", Charset.defaultCharset()));
+                            }
+                        });
                     }
                 });
 
