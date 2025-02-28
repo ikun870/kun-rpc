@@ -5,6 +5,8 @@ import com.kunclass.discovery.NettyBootstrapInitializer;
 import com.kunclass.discovery.Registry;
 import com.kunclass.exceptions.DiscoveryException;
 import com.kunclass.exceptions.NetworkException;
+import com.kunclass.transport.message.KunrpcRequest;
+import com.kunclass.transport.message.RequestPayload;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -66,10 +68,20 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         /**
          * ————————————————————————3.封装报文————————————————————————
          */
-
-
-
-
+        RequestPayload requestPayload = RequestPayload.builder()
+                .interfaceName(interfaceRef.getName())
+                .methodName(method.getName())
+                .parameterTypes(method.getParameterTypes())
+                .parameters(args)
+                .build();
+        //TODO 需要对各种请求id和各种类型进行处理
+        KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
+                .requestId(1L)
+                .compressType((byte) 1)
+                .serializeType((byte) 1)
+                .requestType((byte) 1)
+                .requestPayload(requestPayload)
+                .build();
 
 
         /**
@@ -96,6 +108,9 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 //4.写出报文
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
         KunrpcBootstrap.PENDING_REQUEST.put(1L,completableFuture);
+
+        //这里写出一个请求，这个请求实例会进入pipline执行出站的一系列操作
+        //我们可以想象得到，第一个出站程序一定是将kunrpcRequest--》二进制报文
         channel.writeAndFlush(Unpooled.copiedBuffer("hello".getBytes())).addListener((ChannelFutureListener) future -> {
             //当前future的返回结果是writeAndFlush的返回结果
             //一旦数据被写入，future就结束了
