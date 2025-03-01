@@ -72,7 +72,8 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .interfaceName(interfaceRef.getName())
                 .methodName(method.getName())
                 .parameterTypes(method.getParameterTypes())
-                .parameters(args)
+                .parameterNames(args)
+                .returnType(method.getReturnType())
                 .build();
         //TODO 需要对各种请求id和各种类型进行处理
         KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
@@ -80,6 +81,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .compressType((byte) 1)
                 .serializeType((byte) 1)
                 .requestType((byte) 1)
+
                 .requestPayload(requestPayload)
                 .build();
 
@@ -111,7 +113,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
         //这里写出一个请求，这个请求实例会进入pipline执行出站的一系列操作
         //我们可以想象得到，第一个出站程序一定是将kunrpcRequest--》二进制报文
-        channel.writeAndFlush(Unpooled.copiedBuffer("hello".getBytes())).addListener((ChannelFutureListener) future -> {
+        channel.writeAndFlush(kunrpcRequest).addListener((ChannelFutureListener) future -> {
             //当前future的返回结果是writeAndFlush的返回结果
             //一旦数据被写入，future就结束了
             //我们想要的是服务端给我们的返回结果，所以这里处理completeFuture是不合适的

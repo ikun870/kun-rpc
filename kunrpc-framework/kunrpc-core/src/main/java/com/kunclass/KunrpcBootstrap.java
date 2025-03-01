@@ -1,5 +1,6 @@
 package com.kunclass;
 
+import com.kunclass.channelHandler.handler.KunrpcMessageDecoder;
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
@@ -9,6 +10,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -145,16 +148,8 @@ public class KunrpcBootstrap {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         //添加处理器
                         //这里是核心，我们需要添加很多入站和出站的处理器handler
-                        socketChannel.pipeline().addLast(new SimpleChannelInboundHandler<>() {
-                            @Override
-                            protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object msg) throws Exception {
-                                ByteBuf byteBuf = (ByteBuf) msg;
-                                log.info("byteBf-->{}: " , byteBuf.toString(Charset.defaultCharset()));
-
-                                //可以就此不管了，也可以写回去
-                                channelHandlerContext.channel().writeAndFlush(Unpooled.copiedBuffer("Kunrpc:Hello,Client!", Charset.defaultCharset()));
-                            }
-                        });
+                        socketChannel.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG))
+                                .addLast(new KunrpcMessageDecoder());
                     }
                 });
 

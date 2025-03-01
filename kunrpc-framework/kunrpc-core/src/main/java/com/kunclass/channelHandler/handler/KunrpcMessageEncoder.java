@@ -58,9 +58,9 @@ public class KunrpcMessageEncoder extends MessageToByteEncoder<KunrpcRequest> {
         //序列化方式--用1字节表示
         //压缩方式--用1字节表示
         //请求类型--用1字节表示
+        byteBuf.writeByte(kunrpcRequest.getRequestType());
         byteBuf.writeByte(kunrpcRequest.getSerializeType());
         byteBuf.writeByte(kunrpcRequest.getCompressType());
-        byteBuf.writeByte(kunrpcRequest.getRequestType());
         //请求id--用8字节表示
         byteBuf.writeLong(kunrpcRequest.getRequestId());
         //写入请求体（requestPayload）
@@ -79,7 +79,9 @@ public class KunrpcMessageEncoder extends MessageToByteEncoder<KunrpcRequest> {
     }
 
     private byte[] getBodyBytes(RequestPayload requestPayload) {
-        //对象变成一个字节数组
+        //TODO 针对不同的消息类型需要做不同的处理，心跳的请求，没有payload
+        //希望可以通过一些设计模式，面向对象的编程，让我们可以配置修改序列化和压缩的方式
+        //对象变成一个字节数组 序列化 压缩
         try{
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);

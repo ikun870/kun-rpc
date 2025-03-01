@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 用来描述请求调用方所请求的接口方法的描述
  */
@@ -12,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RequestPayload {
+public class RequestPayload implements Serializable {
 
     //1.接口的名字 com.kunapi.HelloKunrpc
     private String interfaceName;
@@ -23,7 +25,7 @@ public class RequestPayload {
     //3.方法的参数列表：参数类型和具体的参数
     //参数类型用来确定重载方法，具体的参数用来确定调用哪个方法
     private Class<?>[] parameterTypes;// --{java.lang.String}
-    private Object[] parameters;//-- "你好“
+    private Object[] parameterNames;//-- "你好“
 
     //4.返回值的封装
     private Class<?> returnType;//--java.lang.String
