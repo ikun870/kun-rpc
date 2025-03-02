@@ -46,6 +46,8 @@ public class KunrpcBootstrap {
     //定义全局的对外挂起的completableFuture
     public static final Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
 
+    public static final IdGenerator ID_GENERATOR = new IdGenerator(1,2);
+
     //构造函数私有化
     private KunrpcBootstrap() {
     //构造启动引导程序，需要做一些初始化工作

@@ -1,5 +1,6 @@
 package com.kunclass.proxy.handler;
 
+import com.kunclass.IdGenerator;
 import com.kunclass.KunrpcBootstrap;
 import com.kunclass.discovery.NettyBootstrapInitializer;
 import com.kunclass.discovery.Registry;
@@ -79,7 +80,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .build();
         //TODO 需要对各种请求id和各种类型进行处理
         KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
-                .requestId(1L)
+                .requestId(KunrpcBootstrap.ID_GENERATOR.getId())
                 .compressType((byte) 1)
                 .serializeType((byte) 1)
                 .requestType(RequestType.REQUEST.getId())
