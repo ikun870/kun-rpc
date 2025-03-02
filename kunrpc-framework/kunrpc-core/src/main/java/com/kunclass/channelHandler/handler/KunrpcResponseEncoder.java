@@ -1,17 +1,13 @@
 package com.kunclass.channelHandler.handler;
 
-import com.kunclass.transport.message.KunrpcRequest;
+import com.kunclass.Serialize.Serializer;
+import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.transport.message.KunrpcResponse;
 import com.kunclass.transport.message.MessageFormatConstant;
-import com.kunclass.transport.message.RequestPayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 
 
 /**
@@ -64,7 +60,10 @@ public class KunrpcResponseEncoder extends MessageToByteEncoder<KunrpcResponse> 
 
         //写入请求体（body）
 
-        byte[] bodyBytes = getBodyBytes(kunrpcResponse.getBody());
+        Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcResponse.getSerializeType()).getSerializer();
+        byte[] bodyBytes = serializer.serialize(kunrpcResponse.getBody());
+
+
         if(bodyBytes!=null){
             byteBuf.writeBytes(bodyBytes);
         }
@@ -88,24 +87,4 @@ public class KunrpcResponseEncoder extends MessageToByteEncoder<KunrpcResponse> 
 
     }
 
-    private byte[] getBodyBytes(Object body) {
-        //针对不同的消息类型需要做不同的处理，心跳的请求，没有payload
-        if(body==null){
-            return null;
-        }
-        //希望可以通过一些设计模式，面向对象的编程，让我们可以配置修改序列化和压缩的方式
-        //对象变成一个字节数组 序列化 压缩
-        try{
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);
-            outputStream.writeObject(body);
-            byte[] bytes = byteArrayOutputStream.toByteArray();
-            return bytes;
-        }
-        catch (IOException e){
-            log.error("序列化时发生异常");
-            throw new RuntimeException("序列化时发生异常");
-        }
-
-    }
 }

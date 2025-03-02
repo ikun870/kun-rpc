@@ -1,5 +1,7 @@
 package com.kunclass.channelHandler.handler;
 
+import com.kunclass.Serialize.Serializer;
+import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.enumeration.RequestType;
 import com.kunclass.transport.message.KunrpcRequest;
 import com.kunclass.transport.message.MessageFormatConstant;
@@ -9,9 +11,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.Arrays;
 
 /**
@@ -44,6 +43,12 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         }
         return null;
     }
+
+    /**
+     * 解码，将字节数组转换为KunrpcRequest对象
+     * @param byteBuf
+     * @return
+     */
 
     private Object decodeFrame(ByteBuf byteBuf) {
         //1.解析magicNumber
@@ -97,16 +102,13 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
         //有了字节数组之后就可以解压缩，反序列化
         //TODO 解压缩
-        try {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(payload);
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-            RequestPayload requestPayload = (RequestPayload) objectInputStream.readObject();
-            kunrpcRequest.setRequestPayload(requestPayload);
-        }
-        catch (IOException|ClassNotFoundException e) {
-            log.error("请求{}反序列化时发生异常",requestId,e);
-            throw new RuntimeException(e);
-        }
+
+        //反序列化
+        //1--->jdk   2--->json
+        Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getSerializer();
+        RequestPayload requestPayload = serializer.deserialize(payload, RequestPayload.class);
+
+        kunrpcRequest.setRequestPayload(requestPayload);
 
         if(log.isDebugEnabled()){
             log.debug("服务提供方请求{}的报文解码完成",requestId);

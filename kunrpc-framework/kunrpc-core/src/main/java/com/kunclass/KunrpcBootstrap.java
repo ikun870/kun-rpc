@@ -48,6 +48,8 @@ public class KunrpcBootstrap {
 
     public static final IdGenerator ID_GENERATOR = new IdGenerator(1,2);
 
+    public static String SERIALIZER_TYPE = "jdk";
+
     //构造函数私有化
     private KunrpcBootstrap() {
     //构造启动引导程序，需要做一些初始化工作
@@ -192,4 +194,17 @@ public class KunrpcBootstrap {
         return this;
     }
 
+    /**
+     * 用来配置序列化器
+     * @param serializer_type 序列化器类型
+     * @return
+     */
+    public KunrpcBootstrap serializer(String serializer_type) {
+        serializer_type = serializer_type.toLowerCase();
+        SERIALIZER_TYPE = serializer_type;
+        if(!log.isDebugEnabled()) {
+            log.debug("序列化器类型:{}", serializer_type);
+        }
+        return this;
+    }
 }

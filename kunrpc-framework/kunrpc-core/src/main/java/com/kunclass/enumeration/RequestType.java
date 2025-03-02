@@ -1,8 +1,11 @@
 package com.kunclass.enumeration;
 
+import lombok.Getter;
+
 /**
  * 用来标记请求的类型
  */
+@Getter
 public enum RequestType {
 
     REQUEST((byte) 1, "Normal request"),
@@ -11,14 +14,8 @@ public enum RequestType {
     private byte id;
     private String type;
 
-    public byte getId() {
-        return id;
-    }
-
-    public String getType() {
-        return type;
-    }
-
     RequestType(byte b, String request) {
+        this.id = b;
+        this.type = request;
     }
 }

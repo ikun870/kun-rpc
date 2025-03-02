@@ -18,6 +18,7 @@ public class ConsumerApplication {
         KunrpcBootstrap.getInstance()
                 .application("first-kunrpc-consumer")
                 .registry(new RegistryConfig("zookeeper://localhost:2181"))
+                .serializer("JSon")//Hessian:222对比jdk:390的序列化后的字节长度
                 .reference(referenceConfig);
 
         // 获取一个代理对象

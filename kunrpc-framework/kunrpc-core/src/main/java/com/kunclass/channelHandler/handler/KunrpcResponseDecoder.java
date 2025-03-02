@@ -1,7 +1,7 @@
 package com.kunclass.channelHandler.handler;
 
-import com.kunclass.enumeration.RequestType;
-import com.kunclass.transport.message.KunrpcRequest;
+import com.kunclass.Serialize.Serializer;
+import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.transport.message.KunrpcResponse;
 import com.kunclass.transport.message.MessageFormatConstant;
 import com.kunclass.transport.message.RequestPayload;
@@ -10,9 +10,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.Arrays;
 
 @Slf4j
@@ -94,16 +91,14 @@ public class KunrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
 
         //有了字节数组之后就可以解压缩，反序列化
         //TODO 解压缩
-        try {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(body);
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-            Object object  =  objectInputStream.readObject();
-            kunrpcResponse.setBody(object);
-        }
-        catch (IOException|ClassNotFoundException e) {
-            log.error("响应{}反序列化时发生异常",requestId,e);
-            throw new RuntimeException(e);
-        }
+
+
+        //反序列化
+        //1--->jdk 2--->json
+        Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getSerializer();
+        Object responseBody = serializer.deserialize(body, Object.class);
+
+        kunrpcResponse.setBody(responseBody);
 
         if(log.isDebugEnabled()){
             log.debug("响应报文在调用方解码成功，请求id：{}，响应码：{}，序列化方式：{}，压缩方式：{}，body长度：{}",

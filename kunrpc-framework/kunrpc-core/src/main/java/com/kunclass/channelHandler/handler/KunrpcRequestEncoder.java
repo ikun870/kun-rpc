@@ -1,16 +1,14 @@
 package com.kunclass.channelHandler.handler;
 
+import com.kunclass.KunrpcBootstrap;
+import com.kunclass.Serialize.Serializer;
+import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.transport.message.KunrpcRequest;
 import com.kunclass.transport.message.MessageFormatConstant;
-import com.kunclass.transport.message.RequestPayload;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.extern.slf4j.Slf4j;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 
 
 /**
@@ -55,9 +53,9 @@ public class KunrpcRequestEncoder extends MessageToByteEncoder<KunrpcRequest> {
         //序列化方式--用1字节表示
         //压缩方式--用1字节表示
         //请求类型--用1字节表示
-        byteBuf.writeByte(kunrpcRequest.getRequestType());
         byteBuf.writeByte(kunrpcRequest.getSerializeType());
         byteBuf.writeByte(kunrpcRequest.getCompressType());
+        byteBuf.writeByte(kunrpcRequest.getRequestType());
         //请求id--用8字节表示
         byteBuf.writeLong(kunrpcRequest.getRequestId());
 //        //判断请求类型，是否是心跳请求
@@ -72,9 +70,19 @@ public class KunrpcRequestEncoder extends MessageToByteEncoder<KunrpcRequest> {
 //            return;
 //        }
 //
-        //写入请求体（requestPayload）
 
-        byte[] bodyBytes = getBodyBytes(kunrpcRequest.getRequestPayload());
+
+
+        //写入请求体（requestPayload）
+        //1.根据配置的序列化方式进行序列化
+        //怎么实现序列化
+        //1.使用工具类 耦合性高 不方便替换序列化的方式
+        Serializer serializer = SerializerFactory.getSerializerWrapper(KunrpcBootstrap.SERIALIZER_TYPE).getSerializer();
+        byte[] bodyBytes =serializer.serialize(kunrpcRequest.getRequestPayload());
+
+        //2.根据配置的压缩方式进行压缩
+
+
         if(bodyBytes!=null){
             byteBuf.writeBytes(bodyBytes);
         }
@@ -93,27 +101,6 @@ public class KunrpcRequestEncoder extends MessageToByteEncoder<KunrpcRequest> {
 
         if(log.isDebugEnabled()){
             log.debug("请求{}的报文编码完成",kunrpcRequest.getRequestId());
-        }
-
-    }
-
-    private byte[] getBodyBytes(RequestPayload requestPayload) {
-        //针对不同的消息类型需要做不同的处理，心跳的请求，没有payload
-        if(requestPayload==null){
-            return null;
-        }
-        //希望可以通过一些设计模式，面向对象的编程，让我们可以配置修改序列化和压缩的方式
-        //对象变成一个字节数组 序列化 压缩
-        try{
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ObjectOutputStream outputStream = new ObjectOutputStream(byteArrayOutputStream);
-            outputStream.writeObject(requestPayload);
-            byte[] bytes = byteArrayOutputStream.toByteArray();
-            return bytes;
-        }
-        catch (IOException e){
-            log.error("序列化时发生异常");
-            throw new RuntimeException("序列化时发生异常");
         }
 
     }

@@ -25,7 +25,7 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest
             log.debug("服务端调用{}服务的{}方法成功",payload.getInterfaceName(),payload.getMethodName());
         }
 
-        //3.封装响应结果
+        //3.封装响应结果，其中压缩、序列化的格式和kunrpcRequest一样
         KunrpcResponse response = KunrpcResponse.builder()
                 .requestId(kunrpcRequest.getRequestId())
                 .code(ResponseCode.SUCCESS.getCode())

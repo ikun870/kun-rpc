@@ -1,7 +1,7 @@
 package com.kunclass.proxy.handler;
 
-import com.kunclass.IdGenerator;
 import com.kunclass.KunrpcBootstrap;
+import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.discovery.NettyBootstrapInitializer;
 import com.kunclass.discovery.Registry;
 import com.kunclass.enumeration.RequestType;
@@ -9,7 +9,6 @@ import com.kunclass.exceptions.DiscoveryException;
 import com.kunclass.exceptions.NetworkException;
 import com.kunclass.transport.message.KunrpcRequest;
 import com.kunclass.transport.message.RequestPayload;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import lombok.extern.slf4j.Slf4j;
@@ -82,7 +81,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
                 .requestId(KunrpcBootstrap.ID_GENERATOR.getId())
                 .compressType((byte) 1)
-                .serializeType((byte) 1)
+                .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.SERIALIZER_TYPE).getCode())
                 .requestType(RequestType.REQUEST.getId())
                 .requestPayload(requestPayload)
                 .build();
