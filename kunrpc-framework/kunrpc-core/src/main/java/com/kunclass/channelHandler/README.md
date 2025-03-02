@@ -14,13 +14,14 @@ KunrpcRequest（
 pipeline就生效了，报文开始出站
 ---> 第一个处理器(OUT)（log）
 ---> 第二个处理器(OUT  编码器)（完成转换 object-->msg(请求报文、序列化、压缩)）
- 
+
 
 2.服务提供方
 通过netty的channelRead方法接收到请求报文
 pipeline就生效了，报文开始入站
 ---> 第一个处理器(IN)（log）
 ---> 第二个处理器(IN 解码器)（完成转换 解压、反序列化、msg(请求报文)-->object(kunrpcRequest)）
+---> 第三个处理器(IN)（完成方法调用）
 
 3.执行方法调用，得到结果
 

@@ -3,6 +3,7 @@ package com.kunclass.proxy.handler;
 import com.kunclass.KunrpcBootstrap;
 import com.kunclass.discovery.NettyBootstrapInitializer;
 import com.kunclass.discovery.Registry;
+import com.kunclass.enumeration.RequestType;
 import com.kunclass.exceptions.DiscoveryException;
 import com.kunclass.exceptions.NetworkException;
 import com.kunclass.transport.message.KunrpcRequest;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
+ * 调用方的代理对象的调用处理器
  * 该类封装了客户端通信的基础逻辑，每一个代理对象的远程调用过程都封装在了invoke方法中
  * 1.发现服务，从注册中心，寻找一个可用的服务
  * 2.使用netty连接服务器，发送 调用的 服务的名字+方法名字+参数列表，得到结果
@@ -80,8 +82,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .requestId(1L)
                 .compressType((byte) 1)
                 .serializeType((byte) 1)
-                .requestType((byte) 1)
-
+                .requestType(RequestType.REQUEST.getId())
                 .requestPayload(requestPayload)
                 .build();
 
@@ -129,7 +130,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         //如果没有地方处理这个 completeFuture，那么这个请求就会一直挂起阻塞，等待complete的执行
         //q：我们需要在哪里调用complete方法呢？a：在服务提供方的处理器中调用
 //5.获得响应的结果
-        return completableFuture.get(3, TimeUnit.SECONDS);
+        return completableFuture.get(10, TimeUnit.SECONDS);
     }
 
     /**

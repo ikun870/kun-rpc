@@ -1,5 +1,6 @@
 package com.kunclass.channelHandler.handler;
 
+import com.kunclass.enumeration.RequestType;
 import com.kunclass.transport.message.KunrpcRequest;
 import com.kunclass.transport.message.MessageFormatConstant;
 import com.kunclass.transport.message.RequestPayload;
@@ -10,13 +11,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
 
+/**
+ * 服务提供方请求解码器
+ */
+
 @Slf4j
-public class KunrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
-    public KunrpcMessageDecoder() {
+public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
+    public KunrpcRequestDecoder() {
         super(
         //找到当前报文的总长度，截取报文，截取出来的报文我们可以进行解析
         //1.最大帧的长度maxFrameLength，超过这个长度就会被丢弃
@@ -62,14 +66,14 @@ public class KunrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
         //4.解析fullLength
         int fullLength = byteBuf.readInt();
 
-        //5.请求类型
-        byte requestType = byteBuf.readByte();
-
-        //6.序列化方式
+        //5.序列化方式
         byte serializeType = byteBuf.readByte();
 
-        //7.压缩方式
+        //6.压缩方式
         byte compressType = byteBuf.readByte();
+
+        //7.请求类型
+        byte requestType = byteBuf.readByte();
 
         //8.请求id
         long requestId = byteBuf.readLong();
@@ -82,8 +86,8 @@ public class KunrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
                 .compressType(compressType)
                 .build();
 
-        //TODO 心跳请求没有负载，此处可以判断是否有负载
-        if(requestType==2) {
+
+        if(requestType == RequestType.HEARTBEAT.getId()) {
             return kunrpcRequest;
         }
         //9.解析body
@@ -93,7 +97,6 @@ public class KunrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
 
         //有了字节数组之后就可以解压缩，反序列化
         //TODO 解压缩
-        //TODO 反序列化
         try {
             ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(payload);
             ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
@@ -104,6 +107,11 @@ public class KunrpcMessageDecoder extends LengthFieldBasedFrameDecoder {
             log.error("请求{}反序列化时发生异常",requestId,e);
             throw new RuntimeException(e);
         }
+
+        if(log.isDebugEnabled()){
+            log.debug("服务提供方请求{}的报文解码完成",requestId);
+        }
+
         return kunrpcRequest;
 
     }

@@ -1,11 +1,11 @@
 package com.kunclass;
 
-import com.kunclass.channelHandler.handler.KunrpcMessageDecoder;
+import com.kunclass.channelHandler.handler.KunrpcRequestDecoder;
+import com.kunclass.channelHandler.handler.KunrpcResponseEncoder;
+import com.kunclass.channelHandler.handler.MethodCallHandler;
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 
 
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -43,7 +41,7 @@ public class KunrpcBootstrap {
 
 
     //维护已经发布且暴露的服务列表 ，key--》interface的全限定名，value--》serviceConfig
-    private static final Map<String,ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
+    public static final Map<String,ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
 
     //定义全局的对外挂起的completableFuture
     public static final Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
@@ -149,7 +147,11 @@ public class KunrpcBootstrap {
                         //添加处理器
                         //这里是核心，我们需要添加很多入站和出站的处理器handler
                         socketChannel.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG))
-                                .addLast(new KunrpcMessageDecoder());
+                                //消息解码器
+                                .addLast(new KunrpcRequestDecoder())
+                                //根据请求类型，进行方法调用
+                                .addLast(new MethodCallHandler())
+                                .addLast(new KunrpcResponseEncoder());
                     }
                 });
 
