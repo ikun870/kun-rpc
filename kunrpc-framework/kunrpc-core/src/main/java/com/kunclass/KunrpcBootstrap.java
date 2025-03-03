@@ -24,8 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class KunrpcBootstrap {
 
-
-
     //KunrpcBootstrap是一个单例，我们希望每个应用程序都只有一个实例
     private static final KunrpcBootstrap kunrpcBootstrap = new KunrpcBootstrap();
 
@@ -41,18 +39,19 @@ public class KunrpcBootstrap {
 
 
     //维护已经发布且暴露的服务列表 ，key--》interface的全限定名，value--》serviceConfig
-    public static final Map<String,ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
+    public static final Map<String, ServiceConfig<?>> SERVICES_LIST = new ConcurrentHashMap<>(16);
 
     //定义全局的对外挂起的completableFuture
     public static final Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
 
-    public static final IdGenerator ID_GENERATOR = new IdGenerator(1,2);
+    public static final IdGenerator ID_GENERATOR = new IdGenerator(1, 2);
 
     public static String SERIALIZER_TYPE = "jdk";
+    public static String COMPRESSOR_TYPE = "gzip";
 
     //构造函数私有化
     private KunrpcBootstrap() {
-    //构造启动引导程序，需要做一些初始化工作
+        //构造启动引导程序，需要做一些初始化工作
 
     }
 
@@ -63,16 +62,18 @@ public class KunrpcBootstrap {
 
     /**
      * 用来定义当前应用的名字
+     *
      * @param appName 应用名
      * @return this
      */
     public KunrpcBootstrap application(String appName) {
         this.appName = appName;
-        return  kunrpcBootstrap;
+        return kunrpcBootstrap;
     }
 
     /**
      * 用来配置一个注册中心
+     *
      * @param registryConfig 注册中心配置
      * @return this 当前实例
      */
@@ -83,11 +84,12 @@ public class KunrpcBootstrap {
         //尝试使用registryConfig来获取注册中心，类似于工厂模式
         this.registry = registryConfig.getRegistry();
         return this;
-       // return kunrpcBootstrap;
+        // return kunrpcBootstrap;
     }
 
     /**
      * 用来配置一个协议
+     *
      * @param protocolConfig
      * @return
      */
@@ -103,6 +105,7 @@ public class KunrpcBootstrap {
 
     /**
      * 用来发布一个服务,将接口以及实现，注册到服务中心
+     *
      * @param service 独立封装的需要发布的服务
      * @return
      */
@@ -115,17 +118,18 @@ public class KunrpcBootstrap {
 
         //1.当服务调用方通过接口、方法名、具体的方法参数列表发起调用时，服务提供方怎么根据这些信息找到对应的服务实现类，然后调用对应的方法
         //（1）new一个  （2）spring beanFactory.getBean(Class)  （3）自己维护映射关系 ✔️✔️
-        SERVICES_LIST.put(service.getInterface().getName(),service);
+        SERVICES_LIST.put(service.getInterface().getName(), service);
         return this;
     }
 
     /**
      * 用来发布多个服务
+     *
      * @param services 独立封装的需要发布的服务
      * @return
      */
     public KunrpcBootstrap publish(List<ServiceConfig<?>> services) {
-        for(ServiceConfig<?> service : services) {
+        for (ServiceConfig<?> service : services) {
             publish(service);
         }
         return this;
@@ -196,14 +200,29 @@ public class KunrpcBootstrap {
 
     /**
      * 用来配置序列化器
+     *
      * @param serializer_type 序列化器类型
      * @return
      */
     public KunrpcBootstrap serializer(String serializer_type) {
         serializer_type = serializer_type.toLowerCase();
         SERIALIZER_TYPE = serializer_type;
-        if(!log.isDebugEnabled()) {
+        if (!log.isDebugEnabled()) {
             log.debug("序列化器类型:{}", serializer_type);
+        }
+        return this;
+    }
+
+    /**
+     * 用来配置压缩器
+     *
+     * @param compressor_type 压缩器类型
+     * @return
+     */
+    public KunrpcBootstrap compressor(String compressor_type) {
+        COMPRESSOR_TYPE = compressor_type.toLowerCase();
+        if (!log.isDebugEnabled()) {
+            log.debug("压缩器类型:{}", compressor_type);
         }
         return this;
     }

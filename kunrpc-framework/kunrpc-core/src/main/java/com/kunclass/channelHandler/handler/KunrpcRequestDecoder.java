@@ -1,5 +1,7 @@
 package com.kunclass.channelHandler.handler;
 
+import com.kunclass.Compress.Compressor;
+import com.kunclass.Compress.CompressorFactory;
 import com.kunclass.Serialize.Serializer;
 import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.enumeration.RequestType;
@@ -101,7 +103,9 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         byteBuf.readBytes(payload);
 
         //有了字节数组之后就可以解压缩，反序列化
-        //TODO 解压缩
+        //解压缩
+        Compressor compressor = CompressorFactory.getCompressorWrapper(compressType).getCompressor();
+        payload = compressor.decompress(payload);
 
         //反序列化
         //1--->jdk   2--->json

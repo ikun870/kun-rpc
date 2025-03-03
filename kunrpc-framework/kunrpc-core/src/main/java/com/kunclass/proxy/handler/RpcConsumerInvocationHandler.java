@@ -1,5 +1,6 @@
 package com.kunclass.proxy.handler;
 
+import com.kunclass.Compress.CompressorFactory;
 import com.kunclass.KunrpcBootstrap;
 import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.discovery.NettyBootstrapInitializer;
@@ -80,7 +81,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         //TODO 需要对各种请求id和各种类型进行处理
         KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
                 .requestId(KunrpcBootstrap.ID_GENERATOR.getId())
-                .compressType((byte) 1)
+                .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.COMPRESSOR_TYPE).getCode())
                 .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.SERIALIZER_TYPE).getCode())
                 .requestType(RequestType.REQUEST.getId())
                 .requestPayload(requestPayload)

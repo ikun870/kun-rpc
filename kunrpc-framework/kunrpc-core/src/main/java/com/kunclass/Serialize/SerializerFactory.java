@@ -3,9 +3,11 @@ package com.kunclass.Serialize;
 import com.kunclass.Serialize.impl.HessianSerializer;
 import com.kunclass.Serialize.impl.JdkSerializer;
 import com.kunclass.Serialize.impl.JsonSerializer;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class SerializerFactory {
 
     private final static ConcurrentHashMap<String,SerializerWrapper> SERIALIZER_CACHE = new ConcurrentHashMap<>(8);
@@ -29,10 +31,24 @@ public class SerializerFactory {
      * @return SerializerWrapper 序列化器包装类
      */
     public static SerializerWrapper getSerializerWrapper(String serializerName) {
+        if(SERIALIZER_CACHE.get(serializerName)==null){
+            if(log.isInfoEnabled()){
+                log.info("serializerName:{} is not found, use default serializer:JDK",serializerName);
+            }
+            return SERIALIZER_CACHE.get("jdk");
+        }
+
         return SERIALIZER_CACHE.get(serializerName);
     }
 
     public static SerializerWrapper getSerializerWrapper(byte code) {
+        if(SERIALIZER_CACHE_CODE.get(code)==null){
+            if(log.isInfoEnabled()){
+                log.info("code:{} is not found, use default serializer:JDK",code);
+            }
+            return SERIALIZER_CACHE_CODE.get((byte)1);
+        }
+
         return SERIALIZER_CACHE_CODE.get(code);
     }
 }

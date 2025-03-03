@@ -1,5 +1,7 @@
 package com.kunclass.channelHandler.handler;
 
+import com.kunclass.Compress.Compressor;
+import com.kunclass.Compress.CompressorFactory;
 import com.kunclass.Serialize.Serializer;
 import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.transport.message.KunrpcResponse;
@@ -59,9 +61,12 @@ public class KunrpcResponseEncoder extends MessageToByteEncoder<KunrpcResponse> 
         byteBuf.writeLong(kunrpcResponse.getRequestId());
 
         //写入请求体（body）
-
+        //序列化
         Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcResponse.getSerializeType()).getSerializer();
         byte[] bodyBytes = serializer.serialize(kunrpcResponse.getBody());
+        //压缩
+        Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcResponse.getCompressType()).getCompressor();
+        bodyBytes = compressor.compress(bodyBytes);
 
 
         if(bodyBytes!=null){
