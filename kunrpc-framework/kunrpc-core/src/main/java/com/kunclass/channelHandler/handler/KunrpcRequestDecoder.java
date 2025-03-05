@@ -85,16 +85,21 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         //8.请求id
         long requestId = byteBuf.readLong();
 
+        //9.时间戳
+        long timeStamp = byteBuf.readLong();
+
         //我们需要封装
         KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
                 .requestId(requestId)
                 .requestType(requestType)
                 .serializeType(serializeType)
                 .compressType(compressType)
+                .timeStamp(timeStamp)
                 .build();
 
 
         if(requestType == RequestType.HEARTBEAT.getId()) {
+            //心跳请求
             return kunrpcRequest;
         }
         //9.解析body
@@ -111,9 +116,7 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
         //1--->jdk   2--->json
         Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getSerializer();
         RequestPayload requestPayload = serializer.deserialize(payload, RequestPayload.class);
-
         kunrpcRequest.setRequestPayload(requestPayload);
-
         if(log.isDebugEnabled()){
             log.debug("服务提供方请求{}的报文解码完成",requestId);
         }

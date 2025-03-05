@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -67,6 +68,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.COMPRESSOR_TYPE).getCode())
                 .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.SERIALIZER_TYPE).getCode())
                 .requestType(RequestType.REQUEST.getId())
+                .timeStamp(new Date().getTime())
                 .requestPayload(requestPayload)
                 .build();
 
@@ -119,7 +121,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
          */
 //4.写出报文
         CompletableFuture<Object> completableFuture = new CompletableFuture<>();
-        KunrpcBootstrap.PENDING_REQUEST.put(1L,completableFuture);
+        KunrpcBootstrap.PENDING_REQUEST.put(kunrpcRequest.getRequestId(),completableFuture);
 
         //这里写出一个请求，这个请求实例会进入pipline执行出站的一系列操作
         //我们可以想象得到，第一个出站程序一定是将kunrpcRequest--》二进制报文

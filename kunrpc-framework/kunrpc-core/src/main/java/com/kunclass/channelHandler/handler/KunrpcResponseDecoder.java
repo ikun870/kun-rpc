@@ -4,6 +4,7 @@ import com.kunclass.Compress.Compressor;
 import com.kunclass.Compress.CompressorFactory;
 import com.kunclass.Serialize.Serializer;
 import com.kunclass.Serialize.SerializerFactory;
+import com.kunclass.enumeration.RequestType;
 import com.kunclass.transport.message.KunrpcResponse;
 import com.kunclass.transport.message.MessageFormatConstant;
 import com.kunclass.transport.message.RequestPayload;
@@ -13,6 +14,7 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Date;
 
 @Slf4j
 public class KunrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
@@ -74,12 +76,16 @@ public class KunrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         //8.请求id
         long requestId = byteBuf.readLong();
 
+        //9.时间戳
+        long timeStamp = byteBuf.readLong();
+
         //我们需要封装
         KunrpcResponse kunrpcResponse = KunrpcResponse.builder()
                 .requestId(requestId)
                 .compressType(compressType)
                 .serializeType(serializeType)
                 .code(reponseCode)
+                .timeStamp(timeStamp)
                 .build();
 
         //TODO 心跳？
@@ -91,21 +97,24 @@ public class KunrpcResponseDecoder extends LengthFieldBasedFrameDecoder {
         byte[] body = new byte[bodyLength];
         byteBuf.readBytes(body);
 
-        //有了字节数组之后就可以解压缩，反序列化
-        //解压缩
-        Compressor compressor = CompressorFactory.getCompressorWrapper(compressType).getCompressor();
-        body = compressor.decompress(body);
+        if(body.length>0) {
 
-        //反序列化
-        //1--->jdk 2--->json
-        Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getSerializer();
-        Object responseBody = serializer.deserialize(body, Object.class);
+            //有了字节数组之后就可以解压缩，反序列化
+            //解压缩
+            Compressor compressor = CompressorFactory.getCompressorWrapper(compressType).getCompressor();
+            body = compressor.decompress(body);
 
-        kunrpcResponse.setBody(responseBody);
+            //反序列化
+            //1--->jdk 2--->json
+            Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getSerializer();
+            Object responseBody = serializer.deserialize(body, Object.class);
 
-        if(log.isDebugEnabled()){
-            log.debug("响应报文在调用方解码成功，请求id：{}，响应码：{}，序列化方式：{}，压缩方式：{}，body长度：{}",
-                    kunrpcResponse.getRequestId(),kunrpcResponse.getCode(),kunrpcResponse.getSerializeType(),kunrpcResponse.getCompressType(),bodyLength);
+            kunrpcResponse.setBody(responseBody);
+
+            if (log.isDebugEnabled()) {
+                log.debug("响应报文在调用方解码成功，请求id：{}，响应码：{}，序列化方式：{}，压缩方式：{}，body长度：{}",
+                        kunrpcResponse.getRequestId(), kunrpcResponse.getCode(), kunrpcResponse.getSerializeType(), kunrpcResponse.getCompressType(), bodyLength);
+            }
         }
 
         return kunrpcResponse;

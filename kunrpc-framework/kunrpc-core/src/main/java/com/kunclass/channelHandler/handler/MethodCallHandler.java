@@ -2,6 +2,7 @@ package com.kunclass.channelHandler.handler;
 
 import com.kunclass.KunrpcBootstrap;
 import com.kunclass.ServiceConfig;
+import com.kunclass.enumeration.RequestType;
 import com.kunclass.enumeration.ResponseCode;
 import com.kunclass.transport.message.KunrpcRequest;
 import com.kunclass.transport.message.KunrpcResponse;
@@ -19,11 +20,15 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest
         //1.获取负载内容
         RequestPayload payload = kunrpcRequest.getRequestPayload();
         //2.根据负载内容，调用对应的方法
-        Object result = callTargetMethod(payload);
+        Object result = null;
+        if(kunrpcRequest.getRequestType()!= RequestType.HEARTBEAT.getId()){
+            result = callTargetMethod(payload);
 
-        if(log.isDebugEnabled()) {
-            log.debug("服务端调用{}服务的{}方法成功",payload.getInterfaceName(),payload.getMethodName());
+            if(log.isDebugEnabled()) {
+                log.debug("服务端调用{}服务的{}方法成功",payload.getInterfaceName(),payload.getMethodName());
+            }
         }
+
 
         //3.封装响应结果，其中压缩、序列化的格式和kunrpcRequest一样
         KunrpcResponse response = KunrpcResponse.builder()
@@ -32,6 +37,7 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest
                 .compressType(kunrpcRequest.getCompressType())
                 .serializeType(kunrpcRequest.getSerializeType())
                 .body(result)
+                .timeStamp(System.currentTimeMillis())
                 .build();
         //4.写出发送响应
         ctx.channel().writeAndFlush(response);

@@ -21,6 +21,8 @@ public class KunrpcResponse {
     private byte compressType;
     private byte serializeType;
 
+    private Long timeStamp;
+
     //1,成功    2，异常
     private byte code;
 

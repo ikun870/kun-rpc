@@ -1,8 +1,11 @@
 package com.kunclass;
 
 import com.kunapi.HelloKunrpc;
+import com.kunclass.core.HeartbeatDetector;
 import com.kunclass.discovery.RegistryConfig;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
 
 @Slf4j
 public class ConsumerApplication {
@@ -30,6 +33,13 @@ public class ConsumerApplication {
         }
 //        String sayHi = helloKunrpc.sayHi("kunrpc");
 //        log.info("sayHi:{}", sayHi);
+
+        //启动心跳检测
+        System.out.println("启动心跳检测");
+//        for(Map.Entry<String, ServiceConfig<?>> entry : KunrpcBootstrap.SERVICES_LIST.entrySet()) {
+//            HeartbeatDetector.detectHeartbeat(entry.getKey());
+//        }
+        HeartbeatDetector.detectHeartbeat(HelloKunrpc.class.getName());
 
     }
 }

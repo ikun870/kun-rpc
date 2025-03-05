@@ -60,6 +60,7 @@ public class KunrpcRequestEncoder extends MessageToByteEncoder<KunrpcRequest> {
         byteBuf.writeByte(kunrpcRequest.getRequestType());
         //请求id--用8字节表示
         byteBuf.writeLong(kunrpcRequest.getRequestId());
+        byteBuf.writeLong(kunrpcRequest.getTimeStamp());
 //        //判断请求类型，是否是心跳请求
 //        if(kunrpcRequest.getRequestType()== RequestType.HEARTBEAT.getId()){
 //            //先保存当前写指针的位置
@@ -79,16 +80,20 @@ public class KunrpcRequestEncoder extends MessageToByteEncoder<KunrpcRequest> {
         //1.根据配置的序列化方式进行序列化
         //怎么实现序列化
         //1.使用工具类 耦合性高 不方便替换序列化的方式
-        Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcRequest.getSerializeType()).getSerializer();
-        byte[] bodyBytes =serializer.serialize(kunrpcRequest.getRequestPayload());
+        byte[] bodyBytes = null;
+        if(kunrpcRequest.getRequestPayload()!=null){
+            Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcRequest.getSerializeType()).getSerializer();
+            bodyBytes =serializer.serialize(kunrpcRequest.getRequestPayload());
 
-        //2.根据配置的压缩方式进行压缩
-        Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcRequest.getCompressType()).getCompressor();
-        bodyBytes = compressor.compress(bodyBytes);
+            //2.根据配置的压缩方式进行压缩
 
+            Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcRequest.getCompressType()).getCompressor();
+            bodyBytes = compressor.compress(bodyBytes);
+        }
         if(bodyBytes!=null){
             byteBuf.writeBytes(bodyBytes);
         }
+
         int bodyLength = bodyBytes==null?0:bodyBytes.length;
 
         //处理报文总长度

@@ -59,15 +59,18 @@ public class KunrpcResponseEncoder extends MessageToByteEncoder<KunrpcResponse> 
         byteBuf.writeByte(kunrpcResponse.getCompressType());
         //请求id--用8字节表示
         byteBuf.writeLong(kunrpcResponse.getRequestId());
+        byteBuf.writeLong(kunrpcResponse.getTimeStamp());
 
         //写入请求体（body）
         //序列化
-        Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcResponse.getSerializeType()).getSerializer();
-        byte[] bodyBytes = serializer.serialize(kunrpcResponse.getBody());
-        //压缩
-        Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcResponse.getCompressType()).getCompressor();
-        bodyBytes = compressor.compress(bodyBytes);
-
+        byte[] bodyBytes = null;
+        if(kunrpcResponse.getBody()!=null){
+            Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcResponse.getSerializeType()).getSerializer();
+            bodyBytes = serializer.serialize(kunrpcResponse.getBody());
+            //压缩
+            Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcResponse.getCompressType()).getCompressor();
+            bodyBytes = compressor.compress(bodyBytes);
+        }
 
         if(bodyBytes!=null){
             byteBuf.writeBytes(bodyBytes);

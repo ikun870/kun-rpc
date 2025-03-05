@@ -22,6 +22,8 @@ public class KunrpcRequest {
     private byte compressType;
     private byte serializeType;
 
+    private Long timeStamp;
+
     //具体的消息体
     private RequestPayload requestPayload;
 
