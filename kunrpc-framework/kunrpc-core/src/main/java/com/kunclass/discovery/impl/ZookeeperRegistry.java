@@ -1,6 +1,7 @@
 package com.kunclass.discovery.impl;
 
 import com.kunclass.Constant;
+import com.kunclass.KunrpcBootstrap;
 import com.kunclass.ServiceConfig;
 import com.kunclass.discovery.AbstractRegistry;
 import com.kunclass.exceptions.DiscoveryException;
@@ -38,7 +39,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
         }
         //在这个节点下，创建一个临时节点，节点的数据是当前服务的地址.服务提供方的端口一般自己设定，我们还需要一个获取ip的方法。ip通常是一个局域网ip（也非ipv6）
         //TODO:这里的端口号应该是从配置文件中获取
-        String node = parentNode+"/"+ NetUtils.getIp()+":"+8088;
+        String node = parentNode+"/"+ NetUtils.getIp()+":"+ KunrpcBootstrap.PORT;
         if(!ZookeeperUtils.exists(zooKeeper,node,null)) {
             ZookeeperUtils.createNode(zooKeeper,new ZookeeperNode(node,null),null, CreateMode.EPHEMERAL);
         }
@@ -46,8 +47,13 @@ public class ZookeeperRegistry extends AbstractRegistry {
 
     }
 
+    /**
+     *
+     * @param serviceName
+     * @return 服务的地址列表
+     */
     @Override
-    public InetSocketAddress lookup(String serviceName) {
+    public List<InetSocketAddress> lookup(String serviceName) {
         //1.从zookeeper上获取服务的地址
         //服务名称的节点,使用路径来表示
         String parentNode = Constant.BASE_PROVIDERS_PATH+"/"+serviceName;
@@ -58,7 +64,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
         if(inetSocketAddresses.isEmpty()) {
             throw new DiscoveryException("没有可用的服务（主机）");
         }
-        return inetSocketAddresses.get(0);
+        return inetSocketAddresses;
     }
 
     private InetSocketAddress parseNode(String s) {

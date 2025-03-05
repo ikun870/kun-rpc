@@ -5,6 +5,10 @@ import com.kunclass.channelHandler.handler.KunrpcResponseEncoder;
 import com.kunclass.channelHandler.handler.MethodCallHandler;
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
+import com.kunclass.loadBalancer.LoadBalancer;
+import com.kunclass.loadBalancer.impl.ConsistentHashBalancer;
+import com.kunclass.loadBalancer.impl.RoundRobinLoadBalancer;
+import com.kunclass.transport.message.KunrpcRequest;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -12,6 +16,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -24,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class KunrpcBootstrap {
 
+
     //KunrpcBootstrap是一个单例，我们希望每个应用程序都只有一个实例
     private static final KunrpcBootstrap kunrpcBootstrap = new KunrpcBootstrap();
 
@@ -31,7 +37,8 @@ public class KunrpcBootstrap {
     private String appName = "default";
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
-    private int port = 8088;
+    public static final int PORT = 8090;
+    @Getter
     private Registry registry;
 
     //连接的缓存，InetSocketAddress做key时，一定要注意是否重写了equals和toString方法
@@ -48,6 +55,10 @@ public class KunrpcBootstrap {
 
     public static String SERIALIZER_TYPE = "jdk";
     public static String COMPRESSOR_TYPE = "gzip";
+
+    public static LoadBalancer LOAD_BALANCER;
+
+    public static ThreadLocal<KunrpcRequest> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
 
     //构造函数私有化
     private KunrpcBootstrap() {
@@ -83,6 +94,8 @@ public class KunrpcBootstrap {
 
         //尝试使用registryConfig来获取注册中心，类似于工厂模式
         this.registry = registryConfig.getRegistry();
+        //LOAD_BALANCER = new RoundRobinLoadBalancer();
+        LOAD_BALANCER = new ConsistentHashBalancer();
         return this;
         // return kunrpcBootstrap;
     }
@@ -165,8 +178,8 @@ public class KunrpcBootstrap {
 
         //绑定端口，同步等待成功
         try {
-            ChannelFuture channelFuture = bootstrap.bind(port).sync();
-            System.out.println("Server started on port " + port);
+            ChannelFuture channelFuture = bootstrap.bind(PORT).sync();
+            System.out.println("Server started on port " + PORT);
             //等待服务端监听端口关闭
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
@@ -226,4 +239,5 @@ public class KunrpcBootstrap {
         }
         return this;
     }
+
 }

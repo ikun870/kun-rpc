@@ -4,6 +4,7 @@ package com.kunclass.discovery;
 import com.kunclass.ServiceConfig;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 public interface Registry {
 
@@ -14,9 +15,9 @@ public interface Registry {
     void register(ServiceConfig<?> serviceConfig);
 
     /**
-     * 从注册中心拉取一个可用的服务地址
+     * 从注册中心拉取所有可用的服务地址
      * @param serviceName
      * @return 服务地址（ip+port）
      */
-    InetSocketAddress lookup(String serviceName);
+    List<InetSocketAddress> lookup(String serviceName);
 }

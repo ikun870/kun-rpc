@@ -49,27 +49,10 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 //        log.info("method:{}", method.getName());
 //        log.info("args:{}", args);
 
-//1.发现服务，从注册中心，寻找一个可用的服务
-        //reference_arg.setRegistry(registry);
-        //registry
-        //传入服务接口的名字，从注册中心获取服务的地址
-        //TODO：我们每次调用都会去注册中心获取服务地址，这个是不是有点浪费？是的，我们可以做一个缓存+watcher
-        //TODO：我们如何合理得选择一个可用的服务地址呢？而不是只获取第一个。我们可以使用负载均衡算法
-        InetSocketAddress inetSocketAddress = registry.lookup(interfaceRef.getName());
-        log.info("服务调用方{}得到了服务地址inetSocketAddress:{}", interfaceRef.getName(),inetSocketAddress);
 
-        //使用netty连接服务器，发送 调用的 服务的名字+方法名字+参数列表，得到结果
-        //定义线程池，EventLoopGroup是一个线程组，它包含了一组NIO线程，专门用于网络事件的处理
-        //Q:整个连接过程放在这里合适吗？也就意味着每次调用都会产生一个新的netty连接。A:不合适，我们应该缓存连接
-        //也就意味着每次在此处建立一个新的连接是不合适的
 
-        //解决方案：缓存channel，尝试从缓存中获取channel，如果没有，再建立连接，建立连接后，放入缓存
-// 2.尝试获取一个通道
-        Channel channel = getAvailableChannel(inetSocketAddress);
-        log.info("服务调用方{}得到了通道channel:{}", interfaceRef.getName(),channel);
-
-        /**
-         * ————————————————————————3.封装报文————————————————————————
+        /**被调整了顺序，先封装KunrpcRequest，再获取通道，以便将kunrpcRequest放入ThreadLocal中
+         * ————————————————————————1.封装报文————————————————————————
          */
         RequestPayload requestPayload = RequestPayload.builder()
                 .interfaceName(interfaceRef.getName())
@@ -86,6 +69,31 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .requestType(RequestType.REQUEST.getId())
                 .requestPayload(requestPayload)
                 .build();
+
+        //将请求放入本地线程，threadLocal中，在合适的时候remove
+        KunrpcBootstrap.REQUEST_THREAD_LOCAL.set(kunrpcRequest);
+
+//2.发现服务，从注册中心拉取服务列表，并通过客户端负载均衡算法选择一个服务地址
+        //reference_arg.setRegistry(registry);
+        //registry
+        //传入服务接口的名字，从注册中心获取服务的地址
+        //TODO：我们每次调用都会去注册中心获取服务地址，这个是不是有点浪费？是的，我们可以做一个缓存+watcher
+
+        //我们如何合理得选择一个可用的服务地址呢？而不是只获取第一个。我们可以使用负载均衡算法
+
+        InetSocketAddress inetSocketAddress = KunrpcBootstrap.LOAD_BALANCER.selectServiceAddress(interfaceRef.getName());
+
+        log.info("服务调用方{}得到了服务地址inetSocketAddress:{}", interfaceRef.getName(),inetSocketAddress);
+
+        //使用netty连接服务器，发送 调用的 服务的名字+方法名字+参数列表，得到结果
+        //定义线程池，EventLoopGroup是一个线程组，它包含了一组NIO线程，专门用于网络事件的处理
+        //Q:整个连接过程放在这里合适吗？也就意味着每次调用都会产生一个新的netty连接。A:不合适，我们应该缓存连接
+        //也就意味着每次在此处建立一个新的连接是不合适的
+
+        //解决方案：缓存channel，尝试从缓存中获取channel，如果没有，再建立连接，建立连接后，放入缓存
+//3.尝试获取一个通道
+        Channel channel = getAvailableChannel(inetSocketAddress);
+        log.info("服务调用方{}得到了通道channel:{}", interfaceRef.getName(),channel);
 
 
         /**
@@ -128,6 +136,10 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 completableFuture.completeExceptionally(future.cause());
             }
         });
+
+        //清理ThreadLocal
+        KunrpcBootstrap.REQUEST_THREAD_LOCAL.remove();
+
         //如果没有地方处理这个 completeFuture，那么这个请求就会一直挂起阻塞，等待complete的执行
         //q：我们需要在哪里调用complete方法呢？a：在服务提供方的处理器中调用
 //5.获得响应的结果

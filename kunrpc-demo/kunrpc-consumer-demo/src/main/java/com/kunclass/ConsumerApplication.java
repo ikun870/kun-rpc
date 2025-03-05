@@ -24,8 +24,12 @@ public class ConsumerApplication {
 
         // 获取一个代理对象
         HelloKunrpc helloKunrpc = referenceConfig.get();
-        String sayHi = helloKunrpc.sayHi("kunrpc");
-        log.info("sayHi:{}", sayHi);
+        for(int i = 0; i < 10; i++) {
+            String sayHi = helloKunrpc.sayHi("kunrpc");
+            log.info("sayHi:{}", sayHi);
+        }
+//        String sayHi = helloKunrpc.sayHi("kunrpc");
+//        log.info("sayHi:{}", sayHi);
 
     }
 }
