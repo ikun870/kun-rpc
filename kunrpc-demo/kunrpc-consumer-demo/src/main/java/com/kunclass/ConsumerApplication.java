@@ -34,12 +34,6 @@ public class ConsumerApplication {
 //        String sayHi = helloKunrpc.sayHi("kunrpc");
 //        log.info("sayHi:{}", sayHi);
 
-        //启动心跳检测
-        System.out.println("启动心跳检测");
-//        for(Map.Entry<String, ServiceConfig<?>> entry : KunrpcBootstrap.SERVICES_LIST.entrySet()) {
-//            HeartbeatDetector.detectHeartbeat(entry.getKey());
-//        }
-        HeartbeatDetector.detectHeartbeat(HelloKunrpc.class.getName());
 
     }
 }

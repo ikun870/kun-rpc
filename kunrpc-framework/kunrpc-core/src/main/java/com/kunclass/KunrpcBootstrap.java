@@ -8,6 +8,7 @@ import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
 import com.kunclass.loadBalancer.LoadBalancer;
 import com.kunclass.loadBalancer.impl.ConsistentHashBalancer;
+import com.kunclass.loadBalancer.impl.MinimumResponseTimeLoadBalancer;
 import com.kunclass.loadBalancer.impl.RoundRobinLoadBalancer;
 import com.kunclass.transport.message.KunrpcRequest;
 import io.netty.bootstrap.ServerBootstrap;
@@ -39,7 +40,7 @@ public class KunrpcBootstrap {
     private String appName = "default";
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
-    public static final int PORT = 8088;
+    public static final int PORT = 8089;
     @Getter
     private Registry registry;
 
@@ -98,7 +99,7 @@ public class KunrpcBootstrap {
         //尝试使用registryConfig来获取注册中心，类似于工厂模式
         this.registry = registryConfig.getRegistry();
         //LOAD_BALANCER = new RoundRobinLoadBalancer();
-        LOAD_BALANCER = new ConsistentHashBalancer();
+        LOAD_BALANCER = new MinimumResponseTimeLoadBalancer();
         return this;
         // return kunrpcBootstrap;
     }
@@ -206,6 +207,9 @@ public class KunrpcBootstrap {
      * ——————————————————服务调用方的api————————————————————————————————
      */
     public KunrpcBootstrap reference(ReferenceConfig<?> referenceConfig) {
+        //开启对这个服务的心跳检测
+        HeartbeatDetector.detectHeartbeat(referenceConfig.getInterfaceRef().getName());
+
         //在这个方法里，我们是否可以拿到相关的配置项-注册中心
         //配置reference,将来调用get方法时，方便生成代理对象
 

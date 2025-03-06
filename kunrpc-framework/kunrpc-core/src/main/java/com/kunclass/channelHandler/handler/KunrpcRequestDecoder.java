@@ -14,6 +14,7 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.Random;
 
 /**
  * 服务提供方请求解码器
@@ -39,6 +40,11 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+
+        Thread.sleep(new Random().nextInt(50));
+        //这里是为了让心跳检测的耗时出现差异，方便我们通过treemap选择一个最短用时的channel
+        //不然的话心跳检测耗时都是2ms，差距不明显
+
         Object decode = super.decode(ctx, in);
         if(decode instanceof ByteBuf byteBuf) {
             return decodeFrame(byteBuf);

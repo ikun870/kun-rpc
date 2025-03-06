@@ -34,7 +34,7 @@ public class HeartbeatDetector {
         //2.将连接进行缓存
         for (InetSocketAddress inetSocketAddress : lookupResult) {
             try {
-                if(KunrpcBootstrap.CHANNEL_CACHE.containsKey(inetSocketAddress)){
+                if(!KunrpcBootstrap.CHANNEL_CACHE.containsKey(inetSocketAddress)){
                 Channel channel = NettyBootstrapInitializer.getInstance().connect(inetSocketAddress).sync().channel();
                 KunrpcBootstrap.CHANNEL_CACHE.put(inetSocketAddress, channel);
                 }
@@ -44,7 +44,7 @@ public class HeartbeatDetector {
 
 
         //3.任务、定期发送消息
-            Thread thread = new Thread(() -> new Timer().scheduleAtFixedRate(new MyTimerTask(), 2000, 2000),"heartbeat-thread");
+            Thread thread = new Thread(() -> new Timer().scheduleAtFixedRate(new MyTimerTask(), 0, 2000),"heartbeat-thread");
             //设置为守护线程,主线程结束后，守护线程也会结束
             thread.setDaemon(true);
             thread.start();
@@ -102,6 +102,13 @@ public class HeartbeatDetector {
 
             }
 
+            log.info("begin------------------响应时间的treemap------------------");
+            for(Map.Entry<Long, Channel> entry : KunrpcBootstrap.ANSWER_TIME_CHANNEL_CACHE.entrySet()){
+                if(log.isDebugEnabled()){
+                    log.debug("响应时间：{}ms,服务提供方：{}",entry.getKey(),entry.getValue().remoteAddress());
+                }
+            }
+            log.info("end------------------响应时间的treemap------------------");
         }
     }
 
