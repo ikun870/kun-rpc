@@ -9,8 +9,11 @@ import com.kunclass.exceptions.NetworkException;
 import com.kunclass.utils.NetUtils;
 import com.kunclass.utils.zookeeper.ZookeeperNode;
 import com.kunclass.utils.zookeeper.ZookeeperUtils;
+import com.kunclass.watch.OnlineAndOfflineWatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 
 import java.net.InetSocketAddress;
@@ -58,7 +61,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
         //服务名称的节点,使用路径来表示
         String parentNode = Constant.BASE_PROVIDERS_PATH+"/"+serviceName;
         //获取子节点,比如192.168.12.123：2151
-        List<String> childNodes = ZookeeperUtils.getChildren(zooKeeper,parentNode,null);
+        List<String> childNodes = ZookeeperUtils.getChildren(zooKeeper, parentNode, new OnlineAndOfflineWatcher());
         //将所有子节点转换为InetSocketAddress（获取了所有的可用的服务列表）
         List<InetSocketAddress> inetSocketAddresses = childNodes.stream().map(this::parseNode).toList();
         if(inetSocketAddresses.isEmpty()) {

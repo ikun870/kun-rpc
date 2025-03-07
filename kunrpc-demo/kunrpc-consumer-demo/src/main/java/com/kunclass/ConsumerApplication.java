@@ -25,8 +25,20 @@ public class ConsumerApplication {
                 .compressor("Gzip")//Gzip:222对比不压缩:390的序列化后的字节长度
                 .reference(referenceConfig);
 
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         // 获取一个代理对象
         HelloKunrpc helloKunrpc = referenceConfig.get();
+        for(int i = 0; i < 10; i++) {
+            String sayHi = helloKunrpc.sayHi("kunrpc");
+            log.info("sayHi:{}", sayHi);
+        }
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
         for(int i = 0; i < 10; i++) {
             String sayHi = helloKunrpc.sayHi("kunrpc");
             log.info("sayHi:{}", sayHi);

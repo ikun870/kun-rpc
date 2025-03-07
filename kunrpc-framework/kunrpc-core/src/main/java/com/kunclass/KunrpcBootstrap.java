@@ -40,7 +40,7 @@ public class KunrpcBootstrap {
     private String appName = "default";
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
-    public static final int PORT = 8089;
+    public static final int PORT = 8087;
     @Getter
     private Registry registry;
 
@@ -99,7 +99,7 @@ public class KunrpcBootstrap {
         //尝试使用registryConfig来获取注册中心，类似于工厂模式
         this.registry = registryConfig.getRegistry();
         //LOAD_BALANCER = new RoundRobinLoadBalancer();
-        LOAD_BALANCER = new MinimumResponseTimeLoadBalancer();
+        LOAD_BALANCER = new RoundRobinLoadBalancer();
         return this;
         // return kunrpcBootstrap;
     }
