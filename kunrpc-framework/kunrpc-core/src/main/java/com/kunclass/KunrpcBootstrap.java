@@ -41,13 +41,11 @@ public class KunrpcBootstrap {
     //KunrpcBootstrap是一个单例，我们希望每个应用程序都只有一个实例
     private static final KunrpcBootstrap kunrpcBootstrap = new KunrpcBootstrap();
 
-    //定义一些相关的基础配置
-    private String appName = "default";
-    private RegistryConfig registryConfig;
-    private ProtocolConfig protocolConfig;
-    public static final int PORT = 8089;
+
+
+    //全局的配置中心
     @Getter
-    private Registry registry;
+    private Configuration configuration;
 
     //连接的缓存，InetSocketAddress做key时，一定要注意是否重写了equals和toString方法
     public static final Map<InetSocketAddress, Channel> CHANNEL_CACHE = new ConcurrentHashMap<>(16);
@@ -60,18 +58,13 @@ public class KunrpcBootstrap {
     //定义全局的对外挂起的completableFuture
     public static final Map<Long, CompletableFuture<Object>> PENDING_REQUEST = new ConcurrentHashMap<>(128);
 
-    public static final IdGenerator ID_GENERATOR = new IdGenerator(1, 2);
-
-    public static String SERIALIZER_TYPE = "jdk";
-    public static String COMPRESSOR_TYPE = "gzip";
-
-    public static LoadBalancer LOAD_BALANCER;
-
+    //保存request对象，可以在当前线程随时获取
     public static ThreadLocal<KunrpcRequest> REQUEST_THREAD_LOCAL = new ThreadLocal<>();
 
     //构造函数私有化
     private KunrpcBootstrap() {
         //构造启动引导程序，需要做一些初始化工作
+        configuration = new Configuration();
 
     }
 
@@ -87,7 +80,7 @@ public class KunrpcBootstrap {
      * @return this
      */
     public KunrpcBootstrap application(String appName) {
-        this.appName = appName;
+        configuration.setAppName (appName );
         return kunrpcBootstrap;
     }
 
@@ -102,11 +95,19 @@ public class KunrpcBootstrap {
         //我们更希望以后可以扩展更多种不同的实现
 
         //尝试使用registryConfig来获取注册中心，类似于工厂模式
-        this.registry = registryConfig.getRegistry();
-        //LOAD_BALANCER = new RoundRobinLoadBalancer();
-        LOAD_BALANCER = new RoundRobinLoadBalancer();
+        configuration.setRegistryConfig (registryConfig );
+
         return this;
-        // return kunrpcBootstrap;
+    }
+
+    /**
+     * 用来配置一个负载均衡器
+     * @param loadBalancer
+     * @return
+     */
+    public KunrpcBootstrap loadBalancer(LoadBalancer loadBalancer) {
+        configuration.setLoadBalancer (loadBalancer );
+        return this;
     }
 
     /**
@@ -116,7 +117,7 @@ public class KunrpcBootstrap {
      * @return
      */
     public KunrpcBootstrap protocol(ProtocolConfig protocolConfig) {
-        this.protocolConfig = protocolConfig;
+        configuration.setProtocolConfig (protocolConfig );
         log.debug("protocolConfig:{}", protocolConfig.toString());
         return this;
     }
@@ -136,7 +137,7 @@ public class KunrpcBootstrap {
         //注册service，我们抽象了注册中心的概念，使用注册中心的一个实现完成注册
         //这里难道不是强耦合了吗？是的
 
-        registry.register(service);
+        configuration.getRegistryConfig().getRegistry().register(service);
 
         //1.当服务调用方通过接口、方法名、具体的方法参数列表发起调用时，服务提供方怎么根据这些信息找到对应的服务实现类，然后调用对应的方法
         //（1）new一个  （2）spring beanFactory.getBean(Class)  （3）自己维护映射关系 ✔️✔️
@@ -187,8 +188,8 @@ public class KunrpcBootstrap {
 
         //绑定端口，同步等待成功
         try {
-            ChannelFuture channelFuture = bootstrap.bind(PORT).sync();
-            System.out.println("Server started on port " + PORT);
+            ChannelFuture channelFuture = bootstrap.bind(configuration.getPort()).sync();
+            System.out.println("Server started on port " + configuration.getPort());
 
 
             //等待服务端监听端口关闭
@@ -220,7 +221,7 @@ public class KunrpcBootstrap {
 
         //1.reference需要一个注册中心
         //这里是值传递，但是传递的是引用，所以我们可以直接设置
-        referenceConfig.setRegistry(registry);
+        referenceConfig.setRegistry(configuration.getRegistryConfig().getRegistry());
 
         return this;
     }
@@ -233,7 +234,7 @@ public class KunrpcBootstrap {
      */
     public KunrpcBootstrap serializer(String serializer_type) {
         serializer_type = serializer_type.toLowerCase();
-        SERIALIZER_TYPE = serializer_type;
+        configuration.setSerializeType(serializer_type);
         if (!log.isDebugEnabled()) {
             log.debug("序列化器类型:{}", serializer_type);
         }
@@ -247,7 +248,7 @@ public class KunrpcBootstrap {
      * @return
      */
     public KunrpcBootstrap compressor(String compressor_type) {
-        COMPRESSOR_TYPE = compressor_type.toLowerCase();
+        configuration.setCompressType(compressor_type.toLowerCase());
         if (!log.isDebugEnabled()) {
             log.debug("压缩器类型:{}", compressor_type);
         }
@@ -348,7 +349,4 @@ public class KunrpcBootstrap {
         }
     }
 
-    public static void main(String[] args) {
-        getAllClassNames("com.kunclass");
-    }
 }

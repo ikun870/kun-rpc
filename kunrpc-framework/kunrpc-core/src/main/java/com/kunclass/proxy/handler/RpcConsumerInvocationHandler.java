@@ -64,9 +64,9 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .build();
         //TODO 需要对各种请求id和各种类型进行处理
         KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
-                .requestId(KunrpcBootstrap.ID_GENERATOR.getId())
-                .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.COMPRESSOR_TYPE).getCode())
-                .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.SERIALIZER_TYPE).getCode())
+                .requestId(KunrpcBootstrap.getInstance().getConfiguration().getIdGenerator().getId())
+                .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
+                .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
                 .requestType(RequestType.REQUEST.getId())
                 .timeStamp(new Date().getTime())
                 .requestPayload(requestPayload)
@@ -79,11 +79,11 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         //reference_arg.setRegistry(registry);
         //registry
         //传入服务接口的名字，从注册中心获取服务的地址
-        //TODO：我们每次调用都会去注册中心获取服务地址，这个是不是有点浪费？是的，我们可以做一个缓存+watcher
+        //我们每次调用都会去注册中心获取服务地址，这个是不是有点浪费？是的，我们可以做一个缓存+watcher
 
         //我们如何合理得选择一个可用的服务地址呢？而不是只获取第一个。我们可以使用负载均衡算法
 
-        InetSocketAddress inetSocketAddress = KunrpcBootstrap.LOAD_BALANCER.selectServiceAddress(interfaceRef.getName());
+        InetSocketAddress inetSocketAddress = KunrpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectServiceAddress(interfaceRef.getName());
 
         log.info("服务调用方{}得到了服务地址inetSocketAddress:{}", interfaceRef.getName(),inetSocketAddress);
 

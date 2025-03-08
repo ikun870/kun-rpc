@@ -29,7 +29,7 @@ public class HeartbeatDetector {
 
     public static void detectHeartbeat(String serviceName) {
         //1.从注册中心拉取服务列表并建立连接
-        Registry registry = KunrpcBootstrap.getInstance().getRegistry();
+        Registry registry = KunrpcBootstrap.getInstance().getConfiguration().getRegistryConfig().getRegistry();
         List<InetSocketAddress> lookupResult = registry.lookup(serviceName);
 
         //2.将连接进行缓存
@@ -75,11 +75,11 @@ public class HeartbeatDetector {
 
                     //构建一个心跳请求
                     KunrpcRequest kunrpcRequest = KunrpcRequest.builder()
-                            .requestId(KunrpcBootstrap.ID_GENERATOR.getId())
+                            .requestId(KunrpcBootstrap.getInstance().getConfiguration().getIdGenerator().getId())
                             //.requestPayload(null)
                             .requestType(RequestType.HEARTBEAT.getId())
-                            .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.COMPRESSOR_TYPE).getCode())
-                            .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.SERIALIZER_TYPE).getCode())
+                            .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
+                            .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
                             .timeStamp(startTime)
                             .build();
 

@@ -28,7 +28,7 @@ public class OnlineAndOfflineWatcher implements Watcher {
                 log.debug("服务{}：检测到节点事件类型：{}", serviceName,watchedEvent.getType());
             }
             //节点发生变化，重新获取服务列表
-            Registry registry = KunrpcBootstrap.getInstance().getRegistry();
+            Registry registry = KunrpcBootstrap.getInstance().getConfiguration().getRegistryConfig().getRegistry();
             List<InetSocketAddress> addresses = registry.lookup(serviceName);
             for(InetSocketAddress address : addresses) {
                 //todo
@@ -56,7 +56,7 @@ public class OnlineAndOfflineWatcher implements Watcher {
 
             }
             //获取负载均衡器，重新进行负载均衡
-            LoadBalancer loadBalancer = KunrpcBootstrap.LOAD_BALANCER;
+            LoadBalancer loadBalancer = KunrpcBootstrap.getInstance().getConfiguration().getLoadBalancer();
             loadBalancer.reLoadBalance(serviceName,addresses);
 
         }

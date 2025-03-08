@@ -29,7 +29,7 @@ public abstract class AbstractLoadBalancer implements LoadBalancer{
             //2.如果没有找到，就从注册中心拉取服务列表
             //3.将选择器放入缓存
             //负载均衡器内部维护服务列表的缓存,根据服务名称找到服务列表
-            List<InetSocketAddress> serviceAddressesList = KunrpcBootstrap.getInstance().getRegistry().lookup(serviceName);
+            List<InetSocketAddress> serviceAddressesList = KunrpcBootstrap.getInstance().getConfiguration().getRegistryConfig().getRegistry().lookup(serviceName);
 
             //实例化一个选择器，选择器后续会在serviceAddressesList中选择一个服务地址
             selector = getSelector(serviceAddressesList);

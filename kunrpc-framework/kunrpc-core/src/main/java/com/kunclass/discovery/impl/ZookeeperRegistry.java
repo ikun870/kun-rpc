@@ -42,7 +42,7 @@ public class ZookeeperRegistry extends AbstractRegistry {
         }
         //在这个节点下，创建一个临时节点，节点的数据是当前服务的地址.服务提供方的端口一般自己设定，我们还需要一个获取ip的方法。ip通常是一个局域网ip（也非ipv6）
         //TODO:这里的端口号应该是从配置文件中获取
-        String node = parentNode+"/"+ NetUtils.getIp()+":"+ KunrpcBootstrap.PORT;
+        String node = parentNode+"/"+ NetUtils.getIp()+":"+ KunrpcBootstrap.getInstance().getConfiguration().getPort();
         if(!ZookeeperUtils.exists(zooKeeper,node,null)) {
             ZookeeperUtils.createNode(zooKeeper,new ZookeeperNode(node,null),null, CreateMode.EPHEMERAL);
         }
