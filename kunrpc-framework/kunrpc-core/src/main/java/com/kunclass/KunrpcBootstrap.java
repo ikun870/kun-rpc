@@ -1,5 +1,6 @@
 package com.kunclass;
 
+import com.kunclass.annotation.KunrpcApi;
 import com.kunclass.channelHandler.handler.KunrpcRequestDecoder;
 import com.kunclass.channelHandler.handler.KunrpcResponseEncoder;
 import com.kunclass.channelHandler.handler.MethodCallHandler;
@@ -22,10 +23,14 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 
+import java.io.File;
+import java.io.FileFilter;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -249,4 +254,101 @@ public class KunrpcBootstrap {
         return this;
     }
 
+    /**
+     * 通过packageName扫描包下的所有类，发布服务
+     * @param packageName
+     * @return
+     */
+    public KunrpcBootstrap scan(String packageName) {
+        //扫描包下的所有类,获取类名
+        List<String> classNames = getAllClassNames(packageName);
+        //遍历类名，获取类的class对象
+        for (String className : classNames) {
+            //通过反射获取class对象
+            try {
+                Class<?> clazz = Class.forName(className);
+
+                // 获取接口，
+                Class<?>[] interfaces = clazz.getInterfaces();
+                //有接口才执行
+                for (Class<?> anInterface : interfaces) {
+                    //过滤掉没有标记KunrpcApi的接口
+                    if (!anInterface.isAnnotationPresent(KunrpcApi.class)) {
+                        continue;
+                    }
+
+                    //创建serviceConfig
+                    ServiceConfig<?> serviceConfig = new ServiceConfig<>();
+                    serviceConfig.setInterface(anInterface);
+                    serviceConfig.setRef(clazz.getConstructor().newInstance());
+                    //发布服务
+                    publish(serviceConfig);
+                    if(log.isDebugEnabled()) {
+                        log.debug("扫描到服务[{}]，已经发布！", anInterface.getName());
+                    }
+                }
+
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException |InvocationTargetException | NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        //返回当前实例
+        return this;
+    }
+
+    private static List<String> getAllClassNames(String packageName) {
+        //通过packageName获取包下的所有类名
+        //1.通过packageName获取绝对路径
+        String packagePath = packageName.replace(".", "\\");
+        //2.通过相对路径获取文件
+        URL systemResource = ClassLoader.getSystemResource(packagePath);
+        //3.获取文件的绝对路径
+        if(systemResource == null) {
+            throw new RuntimeException("包路径不存在");
+        }
+        String absolutePath = systemResource.getPath();
+
+        //先对absolutePath的路径进行中文解码，比如D:\%e6%89%be%e5%ae%9e%e4%b9%a0转换为D:\找实习
+        absolutePath = URLDecoder.decode(absolutePath, StandardCharsets.UTF_8);
+
+        List<String> classNames = new ArrayList<>();
+        //递归查找所有的class文件
+        recursionFindClassNames(absolutePath,classNames);
+
+        return classNames;
+    }
+
+    private static void recursionFindClassNames(String absolutePath,List<String> classNames) {
+        //获取文件
+
+        File file = new File(absolutePath);
+        if(file.isDirectory()) {
+            //处理文件夹下的所有文件，包括文件夹
+            File[] files = file.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    //只处理class文件和文件夹，避免出现其他后缀文件
+                    return file.getPath().endsWith(".class") || file.isDirectory();
+                }
+            });
+            if(files == null) {
+                return;
+            }
+            //递归处理
+            for (File file1 : files) {
+                recursionFindClassNames(file1.getAbsolutePath(),classNames);
+            }
+        } else {
+
+            String className = absolutePath.substring(absolutePath.indexOf("com"), absolutePath.indexOf(".class"));
+            //将绝对路径转换为类名
+            className = className.replace("\\", ".");
+            classNames.add(className);
+
+        }
+    }
+
+    public static void main(String[] args) {
+        getAllClassNames("com.kunclass");
+    }
 }

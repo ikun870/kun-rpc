@@ -3,7 +3,7 @@ package com.kunapi;
 import com.kunclass.annotation.KunrpcApi;
 
 @KunrpcApi
-public interface HelloKunrpc {
+public interface HelloKunrpc2 {
 
     /**
      * 通用接口，server和client都需要依赖

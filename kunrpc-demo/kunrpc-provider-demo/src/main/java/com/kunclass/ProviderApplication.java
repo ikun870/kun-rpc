@@ -24,7 +24,9 @@ public class ProviderApplication {
                 //协议
                 .protocol(new ProtocolConfig("jdk"))
                 //发布服务到对应的zookeeper上
-                .publish(service)
+                //.publish(service)
+                //扫包批量发布
+                .scan("com.kunclass")
                 .start();
     }
 }
