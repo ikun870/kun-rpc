@@ -111,17 +111,6 @@ public class KunrpcBootstrap {
     }
 
     /**
-     * 用来配置一个协议
-     *
-     * @param protocolConfig
-     * @return
-     */
-    public KunrpcBootstrap protocol(ProtocolConfig protocolConfig) {
-        configuration.setProtocolConfig (protocolConfig );
-        log.debug("protocolConfig:{}", protocolConfig.toString());
-        return this;
-    }
-    /**
      * ——————————————————服务提供方的api————————————————————————————————
      */
 
