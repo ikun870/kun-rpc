@@ -4,6 +4,7 @@ import com.kunclass.KunrpcBootstrap;
 import com.kunclass.discovery.NettyBootstrapInitializer;
 import com.kunclass.discovery.Registry;
 import com.kunclass.discovery.RegistryConfig;
+import com.kunclass.loadBalancer.LoadBalancer;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.zookeeper.WatchedEvent;
@@ -54,11 +55,12 @@ public class OnlineAndOfflineWatcher implements Watcher {
                 }
 
             }
+            //获取负载均衡器，重新进行负载均衡
+            LoadBalancer loadBalancer = KunrpcBootstrap.LOAD_BALANCER;
+            loadBalancer.reLoadBalance(serviceName,addresses);
 
         }
-        //判断是否是节点创建类型的事件
-        else if (watchedEvent.getType() == Event.EventType.NodeCreated) {
-            System.out.println("节点创建");
-        }
+
+
     }
 }

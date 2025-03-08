@@ -110,11 +110,6 @@ public class ConsistentHashBalancer extends AbstractLoadBalancer {
             }
         }
 
-        @Override
-        public void reBalance(List<InetSocketAddress> serviceAddressesList) {
-
-        }
-
 
         /**
          * 具体的hash算法  生成的hash值都比较大，其实也不太均匀

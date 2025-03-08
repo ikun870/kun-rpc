@@ -63,9 +63,5 @@ public class RoundRobinLoadBalancer extends AbstractLoadBalancer {
             return address;
         }
 
-        @Override
-        public void reBalance(List<InetSocketAddress> serviceAddressesList) {
-
-        }
     }
 }

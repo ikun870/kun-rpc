@@ -42,9 +42,5 @@ public class MinimumResponseTimeLoadBalancer extends AbstractLoadBalancer {
 
         }
 
-        @Override
-        public void reBalance(List<InetSocketAddress> serviceAddressesList) {
-
-        }
     }
 }

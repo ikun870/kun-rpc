@@ -40,7 +40,7 @@ public class KunrpcBootstrap {
     private String appName = "default";
     private RegistryConfig registryConfig;
     private ProtocolConfig protocolConfig;
-    public static final int PORT = 8087;
+    public static final int PORT = 8089;
     @Getter
     private Registry registry;
 

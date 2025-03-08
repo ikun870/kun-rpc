@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractLoadBalancer implements LoadBalancer{
 
 
-    //一个服务会匹配一个
+    //一个服务会匹配一个选择器，通过某种算法，选择器为服务选择一个服务地址
     private Map<String,Selector> cache = new ConcurrentHashMap<>();
 
     @Override
@@ -31,9 +31,9 @@ public abstract class AbstractLoadBalancer implements LoadBalancer{
             //负载均衡器内部维护服务列表的缓存,根据服务名称找到服务列表
             List<InetSocketAddress> serviceAddressesList = KunrpcBootstrap.getInstance().getRegistry().lookup(serviceName);
 
-            //通过轮询选择器选择一个服务地址
+            //实例化一个选择器，选择器后续会在serviceAddressesList中选择一个服务地址
             selector = getSelector(serviceAddressesList);
-
+            //记录每一个服务的使用到的选择器
             cache.put(serviceName,selector);
         }
         return selector.getNext();
@@ -46,5 +46,15 @@ public abstract class AbstractLoadBalancer implements LoadBalancer{
      */
     protected  abstract Selector getSelector(List<InetSocketAddress> serviceAddressesList);
 
+    /**
+     * 上下线后，重新加载负载均衡
+     * @param serviceName 服务名称
+     * @param serviceAddresses 服务地址列表
+     */
+    @Override
+    public void reLoadBalance(String serviceName, List<InetSocketAddress> serviceAddresses) {
+        //重新加载负载均衡，就是重新生成一个选择器（处理新的serviceAddresses）
+        cache.put(serviceName,getSelector(serviceAddresses));
+    }
 
 }
