@@ -7,13 +7,13 @@
 
     <registry url="zookeeper://localhost:2181"/>
 
-    <serializeType type="hessian"/>
+    <serializeType type=""/>
     <!--这两种都可以-->
-    <serializer class="com.kunclass.Serialize.impl.HessianSerializer"/>
+    <serializer code= "3" name="hessian" class="com.kunclass.Serialize.impl.HessianSerializer"/>
 
     <compressType type="gzip"/>
     <!--这两种都可以-->
-    <compressor class="com.kunclass.Compress.impl.GzipCompressor"/>
+    <compressor code="1" name="gzip" class="com.kunclass.Compress.impl.GzipCompressor"/>
 
     <loadBalanceType type="MinimumResponseTimeLoadBalancer"/>
     <!--这两种都可以-->

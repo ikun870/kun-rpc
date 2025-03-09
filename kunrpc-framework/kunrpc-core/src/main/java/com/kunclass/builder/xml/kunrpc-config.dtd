@@ -40,11 +40,15 @@
         <!ELEMENT serializer EMPTY>
         <!ATTLIST serializer
                 class CDATA #REQUIRED
+                name CDATA #REQUIRED
+                code CDATA #REQUIRED
                 >
 
         <!ELEMENT compressor EMPTY>
         <!ATTLIST compressor
                 class CDATA #REQUIRED
+                name CDATA #REQUIRED
+                code CDATA #REQUIRED
                 >
 
         <!ELEMENT loadBalancer ANY>

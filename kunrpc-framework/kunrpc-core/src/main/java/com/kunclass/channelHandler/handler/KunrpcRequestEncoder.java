@@ -82,12 +82,12 @@ public class KunrpcRequestEncoder extends MessageToByteEncoder<KunrpcRequest> {
         //1.使用工具类 耦合性高 不方便替换序列化的方式
         byte[] bodyBytes = null;
         if(kunrpcRequest.getRequestPayload()!=null){
-            Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcRequest.getSerializeType()).getSerializer();
+            Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcRequest.getSerializeType()).getObjectImpl();
             bodyBytes =serializer.serialize(kunrpcRequest.getRequestPayload());
 
             //2.根据配置的压缩方式进行压缩
 
-            Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcRequest.getCompressType()).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcRequest.getCompressType()).getObjectImpl();
             bodyBytes = compressor.compress(bodyBytes);
         }
         if(bodyBytes!=null){

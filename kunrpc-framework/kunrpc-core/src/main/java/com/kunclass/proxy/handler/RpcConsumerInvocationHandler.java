@@ -68,7 +68,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 .compressType(CompressorFactory.getCompressorWrapper(KunrpcBootstrap.getInstance().getConfiguration().getCompressType()).getCode())
                 .serializeType(SerializerFactory.getSerializerWrapper(KunrpcBootstrap.getInstance().getConfiguration().getSerializeType()).getCode())
                 .requestType(RequestType.REQUEST.getId())
-                .timeStamp(new Date().getTime())
+                .timeStamp(System.currentTimeMillis())
                 .requestPayload(requestPayload)
                 .build();
 

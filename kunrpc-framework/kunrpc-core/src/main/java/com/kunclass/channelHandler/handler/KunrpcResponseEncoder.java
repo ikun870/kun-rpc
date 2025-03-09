@@ -65,10 +65,10 @@ public class KunrpcResponseEncoder extends MessageToByteEncoder<KunrpcResponse> 
         //序列化
         byte[] bodyBytes = null;
         if(kunrpcResponse.getBody()!=null){
-            Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcResponse.getSerializeType()).getSerializer();
+            Serializer serializer = SerializerFactory.getSerializerWrapper(kunrpcResponse.getSerializeType()).getObjectImpl();
             bodyBytes = serializer.serialize(kunrpcResponse.getBody());
             //压缩
-            Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcResponse.getCompressType()).getCompressor();
+            Compressor compressor = CompressorFactory.getCompressorWrapper(kunrpcResponse.getCompressType()).getObjectImpl();
             bodyBytes = compressor.compress(bodyBytes);
         }
 

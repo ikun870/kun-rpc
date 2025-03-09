@@ -1,5 +1,7 @@
 package com.kunclass.Serialize;
 
+import com.kunclass.config.ObjectWrapper;
+
 /**
  * 序列化接口
  * 用于序列化和反序列化
@@ -25,5 +27,6 @@ public interface Serializer {
      * @param <T> 泛型
      */
     <T> T deserialize(byte[] bytes, Class<T> clazz);
+
 
 }

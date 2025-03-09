@@ -115,12 +115,12 @@ public class KunrpcRequestDecoder extends LengthFieldBasedFrameDecoder {
 
         //有了字节数组之后就可以解压缩，反序列化
         //解压缩
-        Compressor compressor = CompressorFactory.getCompressorWrapper(compressType).getCompressor();
+        Compressor compressor = CompressorFactory.getCompressorWrapper(compressType).getObjectImpl();
         payload = compressor.decompress(payload);
 
         //反序列化
         //1--->jdk   2--->json
-        Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getSerializer();
+        Serializer serializer = SerializerFactory.getSerializerWrapper(serializeType).getObjectImpl();
         RequestPayload requestPayload = serializer.deserialize(payload, RequestPayload.class);
         kunrpcRequest.setRequestPayload(requestPayload);
         if(log.isDebugEnabled()){
