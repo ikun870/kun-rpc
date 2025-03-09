@@ -46,6 +46,9 @@ public class Configuration {
 
     //读xml，dom4j
     public Configuration() {
+        //spi机制发现相关配置项
+        //loadFromSpi(this)
+
         //读取xml配置文件
         loadFromXml(this);
     }
