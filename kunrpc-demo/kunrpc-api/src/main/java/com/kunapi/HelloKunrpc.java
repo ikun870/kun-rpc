@@ -1,6 +1,7 @@
 package com.kunapi;
 
 import com.kunclass.annotation.KunrpcApi;
+import com.kunclass.annotation.TryTimes;
 
 @KunrpcApi
 public interface HelloKunrpc {
@@ -10,6 +11,7 @@ public interface HelloKunrpc {
      * @param msh
      * @return
      */
+    @TryTimes(tryTimes = 3, interval = 3000)
     String sayHi(String msh);
 
 }
