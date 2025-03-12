@@ -2,6 +2,7 @@ package com.kunclass.proxy.handler;
 
 import com.kunclass.Compress.CompressorFactory;
 import com.kunclass.KunrpcBootstrap;
+import com.kunclass.Protection.CircuitBreaker;
 import com.kunclass.Serialize.SerializerFactory;
 import com.kunclass.annotation.TryTimes;
 import com.kunclass.discovery.NettyBootstrapInitializer;
@@ -20,6 +21,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +58,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
      */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        //我们调用sayHi方法，事实上会走进这个代码段中
+     //我们调用sayHi方法，事实上会走进这个代码段中
         //我们已经知道method(具体的方法)、args（参数列表）
 //        log.info("method:{}", method.getName());
 //        log.info("args:{}", args);
@@ -74,7 +77,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
         while(true) {
 
             //什么情况下需要重试。 1，异常 2，响应有问题 code=500
-            try {
+
 
                 /**被调整了顺序，先封装KunrpcRequest，再获取通道，以便将kunrpcRequest放入ThreadLocal中
                  * ————————————————————————1.封装报文————————————————————————
@@ -96,10 +99,10 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                         .requestPayload(requestPayload)
                         .build();
 
-                //将请求放入本地线程，threadLocal中，在合适的时候remove
+                //2.将请求放入本地线程，threadLocal中，在合适的时候remove
                 KunrpcBootstrap.REQUEST_THREAD_LOCAL.set(kunrpcRequest);
 
-//2.发现服务，从注册中心拉取服务列表，并通过客户端负载均衡算法选择一个服务地址
+                //3.发现服务，从注册中心拉取服务列表，并通过客户端负载均衡算法选择一个服务地址
                 //reference_arg.setRegistry(registry);
                 //registry
                 //传入服务接口的名字，从注册中心获取服务的地址
@@ -111,13 +114,39 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
                 log.info("服务调用方{}得到了服务地址inetSocketAddress:{}", interfaceRef.getName(), inetSocketAddress);
 
+                //4.获取当前地址对应的断路器,不存在就创建一个新的（会返回null）
+                CircuitBreaker circuitBreaker = KunrpcBootstrap.getInstance().getConfiguration().getIpCircuitBreaker()
+                        .putIfAbsent(inetSocketAddress, new CircuitBreaker(0.5f, 5));
+                if (circuitBreaker == null) {
+                    circuitBreaker = KunrpcBootstrap.getInstance().getConfiguration().getIpCircuitBreaker().get(inetSocketAddress);
+                }
+            try
+            {
+                if(kunrpcRequest.getRequestType()!=RequestType.HEARTBEAT.getId() && circuitBreaker.isOpen()) {
+                    log.error("熔断器打开，拒绝请求");
+                    Timer timer = new Timer();
+                    //定时器，定时器的任务是关闭熔断器
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            KunrpcBootstrap.getInstance().getConfiguration().getIpCircuitBreaker().get(inetSocketAddress).reset();
+                            log.info("熔断器关闭，允许请求~~~~~~~~");
+                        }
+                    },5000);
+
+                    throw new RuntimeException("熔断器打开，拒绝请求");
+                }
+
+
+
                 //使用netty连接服务器，发送 调用的 服务的名字+方法名字+参数列表，得到结果
                 //定义线程池，EventLoopGroup是一个线程组，它包含了一组NIO线程，专门用于网络事件的处理
                 //Q:整个连接过程放在这里合适吗？也就意味着每次调用都会产生一个新的netty连接。A:不合适，我们应该缓存连接
                 //也就意味着每次在此处建立一个新的连接是不合适的
 
                 //解决方案：缓存channel，尝试从缓存中获取channel，如果没有，再建立连接，建立连接后，放入缓存
-//3.尝试获取一个通道
+
+                //5.尝试获取一个通道
                 Channel channel = getAvailableChannel(inetSocketAddress);
                 log.info("服务调用方{}得到了通道channel:{}", interfaceRef.getName(), channel);
 
@@ -143,7 +172,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 /**
                  * ————————————————————————异步的策略————————————————————————
                  */
-//4.写出报文
+                //6.写出报文
                 CompletableFuture<Object> completableFuture = new CompletableFuture<>();
                 KunrpcBootstrap.PENDING_REQUEST.put(kunrpcRequest.getRequestId(), completableFuture);
 
@@ -163,18 +192,24 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                     }
                 });
 
-                //清理ThreadLocal
+                //7.清理ThreadLocal
                 KunrpcBootstrap.REQUEST_THREAD_LOCAL.remove();
 
                 //如果没有地方处理这个 completeFuture，那么这个请求就会一直挂起阻塞，等待complete的执行
                 //q：我们需要在哪里调用complete方法呢？a：在服务提供方的处理器中调用
-//5.获得响应的结果
-                return completableFuture.get(10, TimeUnit.SECONDS);
+
+                //8.获得响应的结果
+                Object res = completableFuture.get(10, TimeUnit.SECONDS);
+                //这里记录请求成功
+                circuitBreaker.recordRequest(true);
+                return res;
             }
             //这里异常处理
             catch (Exception e) {
                 //次数减一，等待固定时间，固定时间有一定的问题：重试风暴
                 tryTimes--;
+                //如果发生了异常，记录请求失败
+                circuitBreaker.recordRequest(false);
                 try {
                     //如果发生了异常，先sleep一会儿
                     Thread.sleep(interval);
