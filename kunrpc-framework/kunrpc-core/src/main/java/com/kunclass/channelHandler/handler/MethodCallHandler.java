@@ -1,44 +1,85 @@
 package com.kunclass.channelHandler.handler;
 
 import com.kunclass.KunrpcBootstrap;
+import com.kunclass.Protection.RateLimiter;
+import com.kunclass.Protection.TokenBuketRateLimiter;
 import com.kunclass.ServiceConfig;
 import com.kunclass.enumeration.RequestType;
 import com.kunclass.enumeration.ResponseCode;
 import com.kunclass.transport.message.KunrpcRequest;
 import com.kunclass.transport.message.KunrpcResponse;
 import com.kunclass.transport.message.RequestPayload;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.Map;
 
 @Slf4j
 public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, KunrpcRequest kunrpcRequest) throws Exception {
-        //1.获取负载内容
-        RequestPayload payload = kunrpcRequest.getRequestPayload();
-        //2.根据负载内容，调用对应的方法
-        Object result = null;
-        if(kunrpcRequest.getRequestType()!= RequestType.HEARTBEAT.getId()){
-            result = callTargetMethod(payload);
-
-            if(log.isDebugEnabled()) {
-                log.debug("服务端调用{}服务的{}方法成功",payload.getInterfaceName(),payload.getMethodName());
-            }
-        }
-
-
-        //3.封装响应结果，其中压缩、序列化的格式和kunrpcRequest一样
+        //-1.先封装部分响应
         KunrpcResponse response = KunrpcResponse.builder()
                 .requestId(kunrpcRequest.getRequestId())
-                .code(ResponseCode.SUCCESS.getCode())
                 .compressType(kunrpcRequest.getCompressType())
                 .serializeType(kunrpcRequest.getSerializeType())
-                .body(result)
-                .timeStamp(System.currentTimeMillis())
+                .body(null)
                 .build();
+
+
+
+        //0.完成限流相关的操作
+        Channel channel = ctx.channel();
+        SocketAddress socketAddress = channel.remoteAddress();
+        Map<InetSocketAddress, RateLimiter> ipRateLimiter = KunrpcBootstrap.getInstance().getConfiguration().getIpRateLimiter();
+
+        RateLimiter rateLimiter = ipRateLimiter.get((InetSocketAddress)socketAddress);
+        if (rateLimiter == null) {
+            rateLimiter = new TokenBuketRateLimiter(500, 100,50);
+            ipRateLimiter.put((InetSocketAddress)socketAddress, rateLimiter);
+        }
+        boolean tryAcquire = rateLimiter.tryAcquire();
+
+        //限流
+        if (!tryAcquire) {
+            //如果没有获取到令牌，说明限流了,这时需要封装响应，进行返回！
+            response.setCode(ResponseCode.RATE_LIMIT.getCode());
+            log.warn("ip:{}限流了", socketAddress);
+
+        }
+
+        //处理心跳
+        else if (kunrpcRequest.getRequestType() == RequestType.HEARTBEAT.getId()) {
+            response.setCode(ResponseCode.HEARTBEAT_SUCCESS.getCode());
+
+        }else {
+
+            /// --------------------------正常的具体的调用过程---------------------------------
+            //1.获取负载内容
+            RequestPayload payload = kunrpcRequest.getRequestPayload();
+            //2.根据负载内容，调用对应的方法
+            try {
+                Object result = callTargetMethod(payload);
+
+                if (log.isDebugEnabled()) {
+                    log.debug("服务端调用{}服务的{}方法成功", payload.getInterfaceName(), payload.getMethodName());
+                }
+
+                //3.继续封装响应结果，其中压缩、序列化的格式和kunrpcRequest一样
+                response.setCode(ResponseCode.SUCCESS.getCode());
+                response.setBody(result);
+                response.setTimeStamp(System.currentTimeMillis());
+            }catch (Exception e) {
+                //如果调用失败了，设置响应的code
+                response.setCode(ResponseCode.SERVER_ERROR.getCode());
+                log.error("服务端调用{}服务的{}方法失败", payload.getInterfaceName(), payload.getMethodName(), e);
+            }
+        }
         //4.写出发送响应
         ctx.channel().writeAndFlush(response);
     }
