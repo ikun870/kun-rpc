@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CircuitBreaker {
 
-    private volatile boolean isOpen; // 断路器是否打开
+    private volatile boolean isOpen =false; // 断路器是否打开
     private AtomicInteger requestCount = new AtomicInteger(0); // 请求总数
     private AtomicInteger failureCount = new AtomicInteger(0); // 失败请求数
     private int failureThreshold; // 失败阈值，超过这个值就打开断路器

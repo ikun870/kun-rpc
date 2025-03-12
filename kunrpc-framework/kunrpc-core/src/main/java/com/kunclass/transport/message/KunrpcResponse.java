@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- *服务提供方返回的结果
- */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

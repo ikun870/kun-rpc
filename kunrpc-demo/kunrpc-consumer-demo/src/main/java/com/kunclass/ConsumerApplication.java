@@ -33,17 +33,17 @@ public class ConsumerApplication {
             String sayHi = helloKunrpc.sayHi("kunrpc");
             log.info("sayHi:{}", sayHi);
         }
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
-        for(int i = 0; i < 10; i++) {
-            String sayHi = helloKunrpc.sayHi("kunrpc");
-            log.info("sayHi:{}", sayHi);
-        }
+//        try {
+//            Thread.sleep(20000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+//
+//        for(int i = 0; i < 10; i++) {
+//            String sayHi = helloKunrpc.sayHi("kunrpc");
+//            log.info("sayHi:{}", sayHi);
+//        }
 //        String sayHi = helloKunrpc.sayHi("kunrpc");
 //        log.info("sayHi:{}", sayHi);
 

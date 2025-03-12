@@ -1,6 +1,9 @@
 package com.kunclass.config;
 
 import com.kunclass.IdGenerator;
+import com.kunclass.Protection.CircuitBreaker;
+import com.kunclass.Protection.RateLimiter;
+import com.kunclass.Protection.TokenBuketRateLimiter;
 import com.kunclass.discovery.RegistryConfig;
 import com.kunclass.loadBalancer.LoadBalancer;
 import com.kunclass.loadBalancer.impl.RoundRobinLoadBalancer;
@@ -15,6 +18,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 全局的配置类：几种配置方式
@@ -63,6 +69,13 @@ public class Configuration {
     private  String compressType = "gzip";
     //负载均衡器
     private  LoadBalancer loadBalancer = new RoundRobinLoadBalancer();
+    /**
+     * IP都是指的服务端服务对应的IP
+     */
+    //限流器(IP级别的限流器）
+    private final Map<InetSocketAddress, RateLimiter> ipRateLimiter = new ConcurrentHashMap<>(16);
+    //断路器（IP别的熔断器）
+    private final Map<InetSocketAddress, CircuitBreaker> ipCircuitBreaker = new ConcurrentHashMap<>(16);
 
 
     //读xml，dom4j
