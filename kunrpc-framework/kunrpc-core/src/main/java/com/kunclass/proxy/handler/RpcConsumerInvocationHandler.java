@@ -43,9 +43,12 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
     private final Registry  registry;
 
-    public RpcConsumerInvocationHandler(Class<?> interfaceRef, Registry registry) {
+    private String group;
+
+    public RpcConsumerInvocationHandler(Class<?> interfaceRef, Registry registry, String group) {
         this.interfaceRef = interfaceRef;
         this.registry = registry;
+        this.group = group;
     }
 
     /**
@@ -110,7 +113,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
 
                 //我们如何合理得选择一个可用的服务地址呢？而不是只获取第一个。我们可以使用负载均衡算法
 
-                InetSocketAddress inetSocketAddress = KunrpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectServiceAddress(interfaceRef.getName());
+                InetSocketAddress inetSocketAddress = KunrpcBootstrap.getInstance().getConfiguration().getLoadBalancer().selectServiceAddress(interfaceRef.getName(),group);
 
                 log.info("服务调用方{}得到了服务地址inetSocketAddress:{}", interfaceRef.getName(), inetSocketAddress);
 
@@ -122,6 +125,7 @@ public class RpcConsumerInvocationHandler implements InvocationHandler {
                 }
             try
             {
+                //如果是心跳请求，是不需要熔断的
                 if(kunrpcRequest.getRequestType()!=RequestType.HEARTBEAT.getId() && circuitBreaker.isOpen()) {
                     log.error("熔断器打开，拒绝请求");
                     Timer timer = new Timer();

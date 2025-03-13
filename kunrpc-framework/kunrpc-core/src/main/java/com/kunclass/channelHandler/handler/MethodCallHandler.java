@@ -4,6 +4,7 @@ import com.kunclass.KunrpcBootstrap;
 import com.kunclass.Protection.RateLimiter;
 import com.kunclass.Protection.TokenBuketRateLimiter;
 import com.kunclass.ServiceConfig;
+import com.kunclass.core.ShutdownHolder;
 import com.kunclass.enumeration.RequestType;
 import com.kunclass.enumeration.ResponseCode;
 import com.kunclass.transport.message.KunrpcRequest;
@@ -23,25 +24,34 @@ import java.util.Map;
 public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, KunrpcRequest kunrpcRequest) throws Exception {
-        //-1.先封装部分响应
+        Channel channel = ctx.channel();
+        //-3.先封装部分响应
         KunrpcResponse response = KunrpcResponse.builder()
                 .requestId(kunrpcRequest.getRequestId())
                 .compressType(kunrpcRequest.getCompressType())
                 .serializeType(kunrpcRequest.getSerializeType())
                 .body(null)
+                //TODO 这里不设置会产生BUG
                 .timeStamp(System.currentTimeMillis())
                 .build();
 
+        //-2.如果挡板打开，直接返回
+        if(ShutdownHolder.BAFFLE.get()) {
+            response.setCode(ResponseCode.CLOSING.getCode());
+            channel.writeAndFlush(response);
+            return;
+        }
 
+        //-1.先进行请求计数器加一
+        ShutdownHolder.REQUEST_COUNTER.increment();
 
         //0.完成限流相关的操作
-        Channel channel = ctx.channel();
         SocketAddress socketAddress = channel.remoteAddress();
         Map<InetSocketAddress, RateLimiter> ipRateLimiter = KunrpcBootstrap.getInstance().getConfiguration().getIpRateLimiter();
 
         RateLimiter rateLimiter = ipRateLimiter.get((InetSocketAddress)socketAddress);
         if (rateLimiter == null) {
-            rateLimiter = new TokenBuketRateLimiter(500, 100,50);
+            rateLimiter = new TokenBuketRateLimiter(5, 1000,5);
             ipRateLimiter.put((InetSocketAddress)socketAddress, rateLimiter);
         }
         boolean tryAcquire = rateLimiter.tryAcquire();
@@ -53,12 +63,12 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest
             log.warn("ip:{}限流了", socketAddress);
 
         }
-
         //处理心跳
         else if (kunrpcRequest.getRequestType() == RequestType.HEARTBEAT.getId()) {
             response.setCode(ResponseCode.HEARTBEAT_SUCCESS.getCode());
-
-        }else {
+        }
+        else {
+        //正常的具体的调用过程
 
             /// --------------------------正常的具体的调用过程---------------------------------
             //1.获取负载内容
@@ -82,7 +92,10 @@ public class MethodCallHandler extends SimpleChannelInboundHandler<KunrpcRequest
             }
         }
         //4.写出发送响应
-        ctx.channel().writeAndFlush(response);
+        channel.writeAndFlush(response);
+
+        //5.计数器减一
+        ShutdownHolder.REQUEST_COUNTER.decrement();
     }
 
     private Object callTargetMethod(RequestPayload payload) {

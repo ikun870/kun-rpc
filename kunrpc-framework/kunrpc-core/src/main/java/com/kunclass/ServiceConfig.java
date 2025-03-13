@@ -11,6 +11,9 @@ public class ServiceConfig<T> {
     //服务实现类
     private Object ref;
 
+    //服务分组
+    private String group = "default";
+
     public Class<?> getInterface() {
         return interfaceProvider;
     }
@@ -25,5 +28,13 @@ public class ServiceConfig<T> {
 
     public void setRef(Object ref) {
         this.ref = ref;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 }

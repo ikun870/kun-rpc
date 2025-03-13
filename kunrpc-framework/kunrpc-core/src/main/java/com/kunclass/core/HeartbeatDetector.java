@@ -30,7 +30,7 @@ public class HeartbeatDetector {
     public static void detectHeartbeat(String serviceName) {
         //1.从注册中心拉取服务列表并建立连接
         Registry registry = KunrpcBootstrap.getInstance().getConfiguration().getRegistryConfig().getRegistry();
-        List<InetSocketAddress> lookupResult = registry.lookup(serviceName);
+        List<InetSocketAddress> lookupResult = registry.lookup(serviceName,KunrpcBootstrap.getInstance().getConfiguration().getGroup());
 
         //2.将连接进行缓存
         for (InetSocketAddress inetSocketAddress : lookupResult) {

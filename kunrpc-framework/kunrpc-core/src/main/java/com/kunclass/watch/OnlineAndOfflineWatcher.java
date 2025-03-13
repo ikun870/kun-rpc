@@ -29,7 +29,7 @@ public class OnlineAndOfflineWatcher implements Watcher {
             }
             //节点发生变化，重新获取服务列表
             Registry registry = KunrpcBootstrap.getInstance().getConfiguration().getRegistryConfig().getRegistry();
-            List<InetSocketAddress> addresses = registry.lookup(serviceName);
+            List<InetSocketAddress> addresses = registry.lookup(serviceName,KunrpcBootstrap.getInstance().getConfiguration().getGroup());
             for(InetSocketAddress address : addresses) {
                 //todo
                 //新增的节点 会在addresses中，不在CHANNEL_CACHE中，但是可能会被心跳检测的lookup查询到刚好放入CHANNEL_CACHE

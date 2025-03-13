@@ -24,12 +24,13 @@ public class ConsumerApplication {
                 .registry(new RegistryConfig("zookeeper://localhost:2181"))
                 .serializer("Hessian")//Hessian:222对比jdk:390的序列化后的字节长度
                 .compressor("Gzip")//Gzip:222对比不压缩:390的序列化后的字节长度
+                .group("primary")
                 .reference(referenceConfig);
 
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         // 获取一个代理对象
         HelloKunrpc helloKunrpc = referenceConfig.get();
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 100; i++) {
             String sayHi = helloKunrpc.sayHi("kunrpc");
             log.info("sayHi:{}", sayHi);
         }

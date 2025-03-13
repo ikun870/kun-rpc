@@ -12,4 +12,11 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface KunrpcApi {
+
+    /**
+     * api的分组
+     * @return api的分组
+     */
+    String GROUP() default  "default";
+
 }

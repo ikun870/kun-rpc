@@ -28,7 +28,7 @@ public class ReferenceConfig<T> {
     //通过KunrpcBootstrap的reference方法直接拿到registry，用于后续的服务发现。
     private Registry  registry;
 
-
+    private String group;
 
     /**
      * 获取一个api接口的代理对象
@@ -42,7 +42,7 @@ public class ReferenceConfig<T> {
         //2.获取当前接口的类对象
         Class<T>[] classes = new Class[]{interfaceRef};
 
-        InvocationHandler invocationHandler = new RpcConsumerInvocationHandler(interfaceRef, registry);
+        InvocationHandler invocationHandler = new RpcConsumerInvocationHandler(interfaceRef, registry, group);
 
         //使用动态代理生成代理对象
         Object helloProxy = Proxy.newProxyInstance(classLoader, classes, invocationHandler);
@@ -63,5 +63,13 @@ public class ReferenceConfig<T> {
 
     public void setInterfaceRef(Class<T> interfaceRef) {
         this.interfaceRef = interfaceRef;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 }

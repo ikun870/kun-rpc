@@ -22,7 +22,7 @@ package com.kunclass.Protection;
  * 限流和熔断都会导致心跳检测无法正常处理，导致动态下线
  * 处理办法：
  * 1.正常下线
- * 2.心跳检测的请求和响应不走限流器和熔断器
+ * 2.熔断和检测不限制心跳请求的发送√√√
  *
  */
 public class TokenBuketRateLimiter implements RateLimiter {

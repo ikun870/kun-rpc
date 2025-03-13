@@ -6,6 +6,7 @@ import com.kunclass.channelHandler.handler.KunrpcResponseEncoder;
 import com.kunclass.channelHandler.handler.MethodCallHandler;
 import com.kunclass.config.Configuration;
 import com.kunclass.core.HeartbeatDetector;
+import com.kunclass.core.KunrpcShutdownHook;
 import com.kunclass.discovery.RegistryConfig;
 import com.kunclass.loadBalancer.LoadBalancer;
 import com.kunclass.transport.message.KunrpcRequest;
@@ -148,6 +149,10 @@ public class KunrpcBootstrap {
      * 启动netty服务引导程序
      */
     public void start() {
+
+        //优先注册一个关闭应用程序的钩子函数
+        Runtime.getRuntime().addShutdownHook(new KunrpcShutdownHook());
+
         //定义线程池，EventLoopGroup是一个线程组，它包含了一组NIO线程，专门用于网络事件的处理
         //bossGroup用于接收连接，workerGroup用于具体的处理
         EventLoopGroup bossGroup = new NioEventLoopGroup();
@@ -208,7 +213,7 @@ public class KunrpcBootstrap {
         //1.reference需要一个注册中心
         //这里是值传递，但是传递的是引用，所以我们可以直接设置
         referenceConfig.setRegistry(configuration.getRegistryConfig().getRegistry());
-
+        referenceConfig.setGroup(configuration.getGroup());
         return this;
     }
 
@@ -255,8 +260,11 @@ public class KunrpcBootstrap {
             try {
                 Class<?> clazz = Class.forName(className);
 
+
                 // 获取接口，
                 Class<?>[] interfaces = clazz.getInterfaces();
+
+
                 //有接口才执行
                 for (Class<?> anInterface : interfaces) {
                     //过滤掉没有标记KunrpcApi的接口
@@ -264,10 +272,15 @@ public class KunrpcBootstrap {
                         continue;
                     }
 
+                    //获取分组信息
+                    KunrpcApi annotation = anInterface.getAnnotation(KunrpcApi.class);
+                    String group = annotation.GROUP();
+
                     //创建serviceConfig
                     ServiceConfig<?> serviceConfig = new ServiceConfig<>();
                     serviceConfig.setInterface(anInterface);
                     serviceConfig.setRef(clazz.getConstructor().newInstance());
+                    serviceConfig.setGroup(group);//设置组名
                     //发布服务
                     publish(serviceConfig);
                     if(log.isDebugEnabled()) {
@@ -335,4 +348,8 @@ public class KunrpcBootstrap {
         }
     }
 
+    public KunrpcBootstrap group(String group) {
+        configuration.setGroup(group);
+        return this;
+    }
 }

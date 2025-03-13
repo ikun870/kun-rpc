@@ -2,7 +2,7 @@ package com.kunapi;
 
 import com.kunclass.annotation.KunrpcApi;
 
-@KunrpcApi
+
 public interface HelloKunrpc2 {
 
     /**

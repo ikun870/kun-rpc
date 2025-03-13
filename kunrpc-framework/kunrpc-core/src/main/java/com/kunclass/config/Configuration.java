@@ -77,6 +77,8 @@ public class Configuration {
     //断路器（IP别的熔断器）
     private final Map<InetSocketAddress, CircuitBreaker> ipCircuitBreaker = new ConcurrentHashMap<>(16);
 
+    //分组信息
+    private String group = "default";
 
     //读xml，dom4j
     public Configuration() {

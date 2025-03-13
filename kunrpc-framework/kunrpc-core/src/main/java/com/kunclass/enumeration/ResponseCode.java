@@ -1,6 +1,5 @@
 package com.kunclass.enumeration;
 
-import lombok.Data;
 import lombok.Getter;
 
 /**
@@ -17,7 +16,8 @@ public enum ResponseCode {
     HEARTBEAT_SUCCESS((byte) 21, "~~~Heartbeat Success!~~~"),
     RATE_LIMIT((byte) 31, "~~~Rate Limit!~~~"),
     NOT_FOUND((byte) 44, "~~~Not Found!~~~"),
-    SERVER_ERROR((byte) 50, "~~~Server Error!~~~");
+    SERVER_ERROR((byte) 50, "~~~Server Error!~~~"),
+    CLOSING((byte) 60, "~~~Server is closing!~~~");
 
     private byte code;
     private String desc;

@@ -3,7 +3,7 @@ package com.kunapi;
 import com.kunclass.annotation.KunrpcApi;
 import com.kunclass.annotation.TryTimes;
 
-@KunrpcApi
+@KunrpcApi(GROUP = "primary")
 public interface HelloKunrpc {
 
     /**
