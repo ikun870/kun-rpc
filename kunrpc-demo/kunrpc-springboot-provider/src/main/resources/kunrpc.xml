@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE configuration SYSTEM "http://kunclass.com/kunrpc-config.dtd">
 <configuration >
-    <port>8087</port>
+    <port>8088</port>
 
     <appName>kunrpc-default</appName>
 

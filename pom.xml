@@ -12,6 +12,7 @@
         <module>kunrpc-demo</module>
         <module>kunrpc-framework</module>
         <module>kunrpc-manager</module>
+        <module>kunrpc-demo/kunrpc-springboot-consumer</module>
     </modules>
 
     <properties>

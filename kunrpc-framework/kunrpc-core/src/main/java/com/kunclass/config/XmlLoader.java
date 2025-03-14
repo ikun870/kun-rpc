@@ -31,7 +31,13 @@ public class XmlLoader {
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             //1.创建Document
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse("kunrpc-demo/kunrpc-provider-demo/src/main/resources/kunrpc.xml");
+            //在这里输出当前的路径
+            // 获取类加载器
+            ClassLoader classLoader = getClass().getClassLoader();
+
+            Document document = builder.parse(classLoader.getResourceAsStream("kunrpc.xml"));//采用相对路径
+            //kunrpc-demo/kunrpc-provider-demo/src/main/resources/kunrpc.xml
+            //kunrpc-demo/kunrpc-springboot-provider/src/main/resources/kunrpc.xml
             //2.获取根节点
             Element root = document.getDocumentElement();
             // 获取应用名称（保持不变）
