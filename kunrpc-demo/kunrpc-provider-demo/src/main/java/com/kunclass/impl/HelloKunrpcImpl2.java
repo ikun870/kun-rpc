@@ -1,6 +1,9 @@
-package com.kunclass;
+package com.kunclass.impl;
 import com.kunapi.HelloKunrpc;
-public class HelloKunrpcImpl implements  HelloKunrpc{
+import com.kunapi.HelloKunrpc2;
+
+//@KunrpcApi
+public class HelloKunrpcImpl2 implements HelloKunrpc2 {
     @Override
     public String sayHi(String msh) {
         return "Hi, consumer:" + msh;

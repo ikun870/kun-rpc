@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration SYSTEM "http://kunclass.com/kunrpc-config.dtd">
+<configuration >
+    <port>8087</port>
+
+    <appName>kunrpc-default</appName>
+
+    <registry url="zookeeper://localhost:2181"/>
+
+    <serializeType type=""/>
+    <!--这两种都可以-->
+    <serializer code= "3" name="hessian" class="com.kunclass.Serialize.impl.HessianSerializer"/>
+
+    <compressType type="gzip"/>
+    <!--这两种都可以-->
+    <compressor code="1" name="gzip" class="com.kunclass.Compress.impl.GzipCompressor"/>
+
+    <loadBalanceType type="MinimumResponseTimeLoadBalancer"/>
+    <!--这两种都可以-->
+    <loadBalancer class="com.kunclass.loadBalancer.impl.MinimumResponseTimeLoadBalancer"/>
+
+    <idGenerator class="com.kunclass.IdGenerator" dataCenterId="2" machineId="4"/>
+
+
+</configuration>

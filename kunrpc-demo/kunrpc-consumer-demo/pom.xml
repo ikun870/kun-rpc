@@ -9,13 +9,29 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kunrpc-client-demo</artifactId>
+    <artifactId>kunrpc-consumer-demo</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.kunclass</groupId>
             <artifactId>kunrpc-api</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kunclass</groupId>
+            <artifactId>kunrpc-core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kunclass</groupId>
+            <artifactId>kunrpc-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

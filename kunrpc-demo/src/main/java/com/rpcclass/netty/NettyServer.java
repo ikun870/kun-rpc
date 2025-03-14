@@ -8,6 +8,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.util.Arrays;
+
 public class NettyServer {
 
     private int port;
@@ -56,6 +58,16 @@ public class NettyServer {
     }
 
     public static void main(String[] args) {
-        new NettyServer(8080).run();
+        //new NettyServer(8080).run();
+
+        byte[] bytes = "krpc".getBytes();
+        //将bytes转为十六进制字符串
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        System.out.println(sb.toString());
+
+
     }
 }
